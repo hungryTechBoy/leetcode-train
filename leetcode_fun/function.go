@@ -1,11 +1,13 @@
 package leetcode_fun
 
+import (
+	"strings"
+)
 
 type ListNode struct {
 	Val  int
 	Next *ListNode
 }
-
 
 func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	if l1 == nil || l2 == nil {
@@ -52,4 +54,24 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	return head
 }
 
+//https://leetcode.com/problems/string-to-integer-atoi/
+func myAtoi(str string) int {
+	const INT_MAX = 2147483647
+	const INT_MIN = -2147483648
+	const INT_MAX_STR = "2147483647"
+	const INT_MIN_STR = "2147483648"
+
+	trimStr := strings.TrimSpace(str)
+	if len(trimStr) == 0 {
+		return 0
+	}
+
+	positive := true
+	if trimStr[0] == '-' {
+		positive = false
+	}
+
+
+
+}
 
