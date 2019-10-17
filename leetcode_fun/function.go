@@ -1,6 +1,7 @@
 package leetcode_fun
 
 import (
+	"math"
 	"strings"
 )
 
@@ -9,7 +10,7 @@ type ListNode struct {
 	Next *ListNode
 }
 
-func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
+func AddTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 	if l1 == nil || l2 == nil {
 		return nil
 	}
@@ -55,7 +56,7 @@ func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
 }
 
 //https://leetcode.com/problems/string-to-integer-atoi/
-func myAtoi(str string) int {
+func MyAtoi(str string) int {
 	const INT_MAX = 2147483647
 	const INT_MIN = -2147483648
 	const INT_MAX_STR = "2147483647"
@@ -71,7 +72,63 @@ func myAtoi(str string) int {
 		positive = false
 	}
 
+	if positive {
+		trimStr = strings.TrimPrefix(trimStr, "+")
 
+	} else {
+		trimStr = strings.TrimPrefix(trimStr, "-")
+	}
+	trimStr = strings.TrimLeft(trimStr, "0")
 
+	if len(trimStr) == 0 {
+		return 0
+	}
+
+	//判断有没有其他字符串
+	if trimStr[0] < '0' || trimStr[0] > '9' {
+		return 0
+	}
+
+	i := 0
+	for j, s := range trimStr {
+		if s < '0' || s > '9' {
+			break
+		}
+		i = j
+	}
+	trimStr = trimStr[:i+1]
+
+	//判断有没有超出最大值限制
+	if len(trimStr) > len(INT_MAX_STR) {
+		if positive {
+			return INT_MAX
+		} else {
+			return INT_MIN
+		}
+	}
+
+	if len(trimStr) == len(INT_MAX_STR) {
+		for i, s := range trimStr {
+			if int32(INT_MAX_STR[i])-s > 0 {
+				break
+			} else if int32(INT_MAX_STR[i])-s < 0 {
+				if positive {
+					return INT_MAX
+				} else {
+					return  INT_MIN
+				}
+			}
+		}
+	}
+
+	//字符转数字
+	res := 0
+	for i, s := range trimStr {
+		res += int((s - '0')) * int(math.Pow10(len(trimStr)-1-i))
+	}
+
+	if ! positive {
+		res = -res
+	}
+	return res
 }
-

@@ -1,8 +1,7 @@
 package main
 
 import (
-	"fmt"
-	"unicode/utf8"
+   "fmt"
 )
 
 func main() {
@@ -12,11 +11,14 @@ func main() {
     //    //fmt.Printf("%#U starts at byte position %d\n", runeValue, index)
     //}
 
-    const nihongo = "\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98"
-    for i, w := 0, 0; i < len(nihongo); i += w {
-        runeValue, width := utf8.DecodeRuneInString(nihongo[i:])
-        fmt.Printf("%#U starts at byte position %d\n", runeValue, i)
-        w = width
-    }
+   //str := "adv他"
+   //for _,s :=range str {
+   //		fmt.Println(byte(s))
+   //		fmt.Println(s)
+   //}
+
+   	const INT_MAX_STR = "2147483647"
+
+   fmt.Println((int(1)-int(INT_MAX_STR[1])))
 }
 
