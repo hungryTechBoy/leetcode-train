@@ -7,5 +7,6 @@ import (
 )
 
 func main() {
-	fmt.Println(leetcode_fun.MyAtoi("1095502006p8"))
+	s := []int{1,8}
+	fmt.Println(leetcode_fun.MaxArea(s))
 }

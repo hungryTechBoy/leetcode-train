@@ -1,7 +1,7 @@
 package main
 
 import (
-   "fmt"
+	"time"
 )
 
 func main() {
@@ -17,8 +17,22 @@ func main() {
    //		fmt.Println(s)
    //}
 
-   	const INT_MAX_STR = "2147483647"
 
-   fmt.Println((int(1)-int(INT_MAX_STR[1])))
+   	go func() {
+   		for {
+   			if 5> 9 {
+   				break
+			}
+		}
+	}()
+
+   	time.Sleep(1* time.Second)
+   	panic("error")
+   	//fmt.Println("test")
+
+   	//for i := range ch_t {
+   	//	fmt.Println(i)
+	//}
+
 }
 

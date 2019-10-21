@@ -115,7 +115,7 @@ func MyAtoi(str string) int {
 				if positive {
 					return INT_MAX
 				} else {
-					return  INT_MIN
+					return INT_MIN
 				}
 			}
 		}
@@ -131,4 +131,16 @@ func MyAtoi(str string) int {
 		res = -res
 	}
 	return res
+}
+
+//https://leetcode-cn.com/problems/container-with-most-water/
+func MaxArea(height [] int) int {
+	maxArea := 0
+	for i, val := range height {
+		for j := range MakeRange(0, i, 1) {
+			area := (i - j) * Min(val, height[j])
+			maxArea = Max(maxArea, area)
+		}
+	}
+	return maxArea
 }
