@@ -144,3 +144,28 @@ func MaxArea(height [] int) int {
 	}
 	return maxArea
 }
+
+//https://leetcode-cn.com/problems/remove-nth-node-from-end-of-list/
+func RemoveNthFromEnd(head *ListNode, n int) *ListNode {
+	var temp *ListNode
+	var length int
+	for i, t := 0, head; t != nil; i, t = i+1, t.Next {
+		length = i
+		if i == n {
+			temp = t
+			break
+		}
+	}
+
+	if temp == nil && n == length+1 {
+		return head.Next
+	}
+
+	temp_h := head
+	for ; temp.Next != nil; temp_h, temp = temp_h.Next, temp.Next {
+	}
+
+	temp_h.Next = temp_h.Next.Next
+	return head
+}
+

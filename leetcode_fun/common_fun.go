@@ -24,5 +24,4 @@ func Min(n1 int, n2 int) int {
 	} else {
 		return n1
 	}
-
 }

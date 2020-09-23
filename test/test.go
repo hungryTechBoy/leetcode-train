@@ -1,38 +1,32 @@
 package main
 
 import (
-	"time"
+	"fmt"
 )
 
 func main() {
-	//const nihongo = "\xbd\xb2\x3d\xbc\x20\xe2\x8c\x98"
-    //for index, runeValue := range nihongo {
-    //	fmt.Println(index, runeValue)
-    //    //fmt.Printf("%#U starts at byte position %d\n", runeValue, index)
-    //}
-
-   //str := "adv他"
-   //for _,s :=range str {
-   //		fmt.Println(byte(s))
-   //		fmt.Println(s)
-   //}
-
-
-   	go func() {
-   		for {
-   			if 5> 9 {
-   				break
-			}
-		}
-	}()
-
-   	time.Sleep(1* time.Second)
-   	panic("error")
-   	//fmt.Println("test")
-
-   	//for i := range ch_t {
-   	//	fmt.Println(i)
-	//}
+	var t interface{}
+	t = 6
+	switch t := t.(type) {
+	default:
+		fmt.Printf("unexpected type %T\n", t) // %T prints whatever type t has
+	case bool:
+		fmt.Printf("boolean %t\n", t) // t has type bool
+	case int:
+		fmt.Printf("integer %d\n", t) // t has type int
+	case *bool:
+		fmt.Printf("pointer to boolean %t\n", *t) // t has type *bool
+	case *int:
+		fmt.Printf("pointer to integer %d\n", *t) // t has type *int
+	}
 
 }
 
+type (
+	namespace struct {
+		NamespaceName  string `json:"namespaceName"`
+		releaseKey     string `json:"-"` //最近可用version
+		latestKey      string `json:"-"` //最新的version
+		NotificationId int64  `json:"notificationId"`
+	}
+)
