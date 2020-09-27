@@ -1,4 +1,4 @@
-package leetcode_fun
+package main
 
 import (
 	"math"
@@ -169,3 +169,52 @@ func RemoveNthFromEnd(head *ListNode, n int) *ListNode {
 	return head
 }
 
+//零钱兑换:https://leetcode-cn.com/problems/coin-change/
+func coinChange(coins []int, amount int) int {
+	if amount == 0 {
+		return 0
+	}
+	var amountToCount = make(map[int]int)
+	min := minCount(coins, amount, amountToCount)
+	if min == 0 {
+		return -1
+	}
+
+	return min
+}
+
+func minCount(coins []int, amount int, amountToCount map[int]int) int {
+	if amount < 0 {
+		return 0
+	}
+
+	if val, ok := amountToCount[amount]; ok {
+		return val
+	}
+
+	var countList []int
+	for _, coin := range coins {
+		if amount == coin {
+			return 1
+		}
+		res := minCount(coins, amount-coin, amountToCount)
+		if res > 0 {
+			countList = append(countList, res+1)
+		}
+		if _, ok := amountToCount[amount-coin]; !ok {
+			amountToCount[amount-coin] = res
+		}
+	}
+
+	if len(countList) == 0 {
+		return 0
+	}
+	min := countList[0]
+	for _, v := range countList {
+		if v < min {
+			min = v
+		}
+	}
+
+	return min
+}

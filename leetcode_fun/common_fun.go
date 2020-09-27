@@ -1,4 +1,4 @@
-package leetcode_fun
+package main
 
 func MakeRange(beg int, end int, step int) []int {
 	res := make([]int, (end-beg)/step+1)
