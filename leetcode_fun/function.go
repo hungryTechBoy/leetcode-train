@@ -218,3 +218,204 @@ func minCount(coins []int, amount int, amountToCount map[int]int) int {
 
 	return min
 }
+
+type resNode struct {
+	i   int
+	res []int
+}
+
+//不使用递归函数
+func coinChange2(coins []int, amount int) int {
+	var amountList = make([]int, amount+1)
+	amountList[0] = 0
+	for i := 1; i < amount+1; i++ {
+		min := -1
+		for _, c := range coins {
+			if i-c >= 0 && amountList[i-c] >= 0 {
+				if min == -1 {
+					min = amountList[i-c] + 1
+					continue
+				}
+				if min > amountList[i-c]+1 {
+					min = amountList[i-c] + 1
+				}
+			}
+		}
+		amountList[i] = min
+	}
+	return amountList[amount]
+}
+
+func coinChange3(coins []int, amount int) int {
+	var amountList = make([]int, amount+1)
+	for i := range amountList {
+		amountList[i] = amount + 1
+	}
+
+	amountList[0] = 0
+	for i := 1; i < amount+1; i++ {
+		for _, c := range coins {
+			if i-c < 0 {
+				continue
+			}
+			if amountList[i] > amountList[i-c]+1 {
+				amountList[i] = amountList[i-c] + 1
+			}
+		}
+	}
+
+	if amountList[amount] == amount+1 {
+		return -1
+	}
+	return amountList[amount]
+}
+
+type TreeNode struct {
+	Val   int
+	Left  *TreeNode
+	Right *TreeNode
+}
+
+//前序遍历:https://leetcode-cn.com/problems/binary-tree-preorder-traversal/
+func preorderTraversal(root *TreeNode) []int {
+	if root == nil {
+		return nil
+	}
+	var res []int
+	leftVal := preorderTraversal(root.Left)
+	rightVal := preorderTraversal(root.Right)
+
+	res = append(res, root.Val)
+	res = append(res, leftVal...)
+	res = append(res, rightVal...)
+	return res
+}
+
+//前序遍历非递归
+func preorderTraversal2(root *TreeNode) []int {
+	var res []int
+	var stack []*TreeNode
+
+	for {
+		if root == nil {
+			if len(stack) == 0 {
+				break
+			}
+			root = stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			root = root.Right
+			continue
+		}
+
+		res = append(res, root.Val)
+		stack = append(stack, root)
+		root = root.Left
+	}
+
+	return res
+}
+
+//前序遍历非递归
+func preorderTraversal3(root *TreeNode) []int {
+	var res []int
+	var stack []*TreeNode
+	if root == nil {
+		return nil
+	}
+	stack = append(stack, root)
+
+	for len(stack) > 0 {
+		root = stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+
+		res = append(res, root.Val)
+
+		if root.Right != nil {
+			stack = append(stack, root.Right)
+		}
+		if root.Left != nil {
+			stack = append(stack, root.Left)
+		}
+	}
+	return res
+}
+
+//中序遍历:https://leetcode-cn.com/problems/binary-tree-inorder-traversal/
+func inorderTraversal(root *TreeNode) []int {
+	if root == nil {
+		return nil
+	}
+	var res []int
+	leftVal := inorderTraversal(root.Left)
+	res = append(res, leftVal...)
+	res = append(res, root.Val)
+	rightVal := inorderTraversal(root.Right)
+	res = append(res, rightVal...)
+	return res
+}
+
+//中序遍历，比较与preorderTraversal2的异同点
+func inorderTraversal2(root *TreeNode) []int {
+	var res []int
+	var stack []*TreeNode
+
+	for {
+		if root == nil {
+			if len(stack) == 0 {
+				break
+			}
+			root = stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			res = append(res, root.Val)
+			root = root.Right
+			continue
+		}
+
+		stack = append(stack, root)
+		root = root.Left
+	}
+
+	return res
+}
+
+//后序遍历:https://leetcode-cn.com/problems/binary-tree-postorder-traversal/
+func postorderTraversal(root *TreeNode) []int {
+	var res []int
+	var stack []*TreeNode
+
+	for {
+		if root == nil {
+			if len(stack) == 0 {
+				break
+			}
+			root = stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			root = root.Left
+			continue
+		}
+
+		res = append(res, root.Val)
+		stack = append(stack, root)
+		root = root.Right
+	}
+
+	for i := 0; i < len(res)/2; i++ {
+		res[i], res[len(res)-1-i] = res[len(res)-1-i], res[i]
+	}
+	return res
+}
+
+//后序遍历递归
+func postorderTraversal2(root *TreeNode) []int {
+	if root == nil {
+		return nil
+	}
+
+	var nodes []int
+	lNodes := postorderTraversal2(root.Left)
+	rNodes := postorderTraversal2(root.Right)
+	nodes = append(nodes, lNodes...)
+	nodes = append(nodes, rNodes...)
+	nodes = append(nodes, root.Val)
+	return nodes
+}

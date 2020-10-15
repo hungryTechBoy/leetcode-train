@@ -4,8 +4,26 @@ package main
 import "fmt"
 
 func main() {
-	coins := []int{492,364,366,144,492,316,221,326,16,166,353,5253}
-	amount := 5253
-	fmt.Println(coinChange(coins, amount))
-}
+	//coins := []int{1, 2, 5}
+	//amount := 11
+	//fmt.Println(coinChange3(coins, amount))
 
+	t1 := TreeNode{
+		Val:   1,
+		Left:  nil,
+		Right: nil,
+	}
+	t2 := TreeNode{
+		Val:   4,
+		Left:  nil,
+		Right: nil,
+	}
+	t3 := TreeNode{
+		Val:   3,
+		Left:  nil,
+		Right: nil,
+	}
+	t1.Right = &t2
+	t2.Left = &t3
+	fmt.Println(preorderTraversal2(&t1))
+}
