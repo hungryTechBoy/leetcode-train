@@ -25,3 +25,19 @@ func Min(n1 int, n2 int) int {
 		return n1
 	}
 }
+
+func IntSliceContains(is []int, i int) bool {
+	for _, s := range is {
+		if s == i {
+			return true
+		}
+	}
+	return false
+}
+
+func Abs(i int) int {
+	if i < 0 {
+		return -i
+	}
+	return i
+}

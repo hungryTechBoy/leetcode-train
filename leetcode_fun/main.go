@@ -8,22 +8,24 @@ func main() {
 	//amount := 11
 	//fmt.Println(coinChange3(coins, amount))
 
-	t1 := TreeNode{
-		Val:   1,
-		Left:  nil,
-		Right: nil,
-	}
-	t2 := TreeNode{
-		Val:   4,
-		Left:  nil,
-		Right: nil,
-	}
-	t3 := TreeNode{
-		Val:   3,
-		Left:  nil,
-		Right: nil,
-	}
-	t1.Right = &t2
-	t2.Left = &t3
-	fmt.Println(preorderTraversal2(&t1))
+	//t1 := TreeNode{
+	//	Val:   1,
+	//	Left:  nil,
+	//	Right: nil,
+	//}
+	//t2 := TreeNode{
+	//	Val:   4,
+	//	Left:  nil,
+	//	Right: nil,
+	//}
+	//t3 := TreeNode{
+	//	Val:   3,
+	//	Left:  nil,
+	//	Right: nil,
+	//}
+	//t1.Right = &t2
+	//t2.Left = &t3
+	//fmt.Println(preorderTraversal2(&t1))
+
+	fmt.Println(solveNQueens(4))
 }

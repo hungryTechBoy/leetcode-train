@@ -419,3 +419,102 @@ func postorderTraversal2(root *TreeNode) []int {
 	nodes = append(nodes, root.Val)
 	return nodes
 }
+
+//全排列：https://leetcode-cn.com/problems/permutations/
+func permute(nums []int) (res [][]int) {
+	permutation(&res, nums, nil)
+	return
+}
+
+func permutation(res *[][]int, nums []int, seq []int) {
+	if len(nums) == len(seq) {
+		rs := make([]int, len(seq))
+		copy(rs, seq)
+		*res = append(*res, rs)
+	}
+
+	for _, num := range nums {
+		if IntSliceContains(seq, num) {
+			continue
+		}
+		seq = append(seq, num)
+		permutation(res, nums, seq)
+		seq = seq[:len(seq)-1]
+	}
+}
+
+//动态规划解决
+func permute2(nums []int) (res [][]int) {
+	if len(nums) == 0 {
+		return
+	}
+	res = append(res, []int{nums[0]})
+	nums = nums[1:]
+	for _, num := range nums {
+		var tmpRes [][]int
+		for _, r := range res {
+			for i := range r {
+				var t []int
+				t = append(t, r[:i]...)
+				t = append(t, num)
+				t = append(t, r[i:]...)
+				tmpRes = append(tmpRes, t)
+			}
+
+			var t []int
+			t = append(t, r...)
+			t = append(t, num)
+			tmpRes = append(tmpRes, t)
+		}
+		res = tmpRes
+	}
+	return
+}
+
+//N皇后:https://leetcode-cn.com/problems/n-queens/
+func solveNQueens(n int) [][]string {
+	var queenLocs [][]int
+	var locs []int
+	locateQueens(&queenLocs, locs, n)
+	var res [][]string
+	ss := strings.Repeat(".", n)
+
+	for _, loc := range queenLocs {
+		var rr []string
+		for _, l := range loc {
+			s := ss
+			bs := []byte(s)
+			bs[l] = 'Q'
+			rr = append(rr, string(bs))
+		}
+		res = append(res, rr)
+	}
+
+	return res
+}
+
+func locateQueens(queenLocs *[][]int, locs []int, n int) {
+	if len(locs) == n {
+		rs := make([]int, n)
+		copy(rs, locs)
+		*queenLocs = append(*queenLocs, rs)
+	}
+
+	for i := 0; i < n; i++ {
+		if satisfyLoc(locs, i) {
+			locs = append(locs, i)
+			locateQueens(queenLocs, locs, n)
+			locs = locs[:len(locs)-1]
+		}
+	}
+}
+
+//判断当前皇后位置是否满足不相互攻击
+func satisfyLoc(loc []int, n int) bool {
+	for i, l := range loc {
+		if l == n || Abs(len(loc)-i) == Abs(n-l) {
+			return false
+		}
+	}
+	return true
+}
