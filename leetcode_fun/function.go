@@ -518,3 +518,123 @@ func satisfyLoc(loc []int, n int) bool {
 	}
 	return true
 }
+
+//TODO:试试使用动态规划
+func solveNQueens2(n int) [][]string {
+	return nil
+}
+
+//最短路径开锁：https://leetcode-cn.com/problems/open-the-lock/
+func openLock(deadends []string, target string) int {
+	var quene [][]byte
+	quene = append(quene, []byte("0000"))
+	step := 0
+	visited := make(map[string]bool)
+	visited["0000"] = true
+	for {
+		length := len(quene)
+		if len(quene) == 0 {
+			break
+		}
+		for _, q := range quene {
+			if inDeadends(string(q), deadends) {
+				continue
+			}
+			if string(q) == target {
+				return step
+			}
+			quene = putInQuene(q, quene, visited)
+		}
+
+		step++
+		quene = quene[length:]
+	}
+
+	return -1
+}
+
+func inDeadends(s string, deadends []string) bool {
+	for _, d := range deadends {
+		if d == s {
+			return true
+		}
+	}
+	return false
+}
+
+func putInQuene(node []byte, quene [][]byte, visited map[string]bool) [][]byte {
+	for i, b := range node {
+		n1 := make([]byte, len(node))
+		copy(n1, node)
+		if b == '9' {
+			n1[i] = '0'
+		} else {
+			n1[i]++
+		}
+		if _, ok := visited[string(n1)]; !ok {
+			quene = append(quene, n1)
+			visited[string(n1)] = true
+		}
+
+		n2 := make([]byte, len(node))
+		copy(n2, node)
+		if b == '0' {
+			n2[i] = '9'
+		} else {
+			n2[i]--
+		}
+		if _, ok := visited[string(n2)]; !ok {
+			quene = append(quene, n2)
+			visited[string(n2)] = true
+		}
+	}
+
+	return quene
+}
+
+//二分查找:https://leetcode-cn.com/problems/binary-search/
+func binarySearch(nums []int, target int) int {
+	b, e := 0, len(nums)-1
+	for b <= e {
+
+		mid := (b + e) / 2
+		if nums[mid] == target {
+			return mid
+		} else if nums[mid] < target {
+			b = mid + 1
+		} else if nums[mid] > target {
+			e = mid - 1
+		}
+	}
+
+	return -1
+}
+
+//在排序数组中查找元素的第一个和最后一个位置:https://leetcode-cn.com/problems/find-first-and-last-position-of-element-in-sorted-array/
+func searchRange(nums []int, target int) []int {
+	var r []int
+	r = append(r, searchExtremeValue(nums, target, false), searchExtremeValue(nums, target, true))
+	return r
+}
+
+func searchExtremeValue(nums []int, target int, findMax bool) int {
+	b, e := 0, len(nums)-1
+	extreme := -1
+	for b <= e {
+		mid := (b + e) / 2
+		if nums[mid] == target {
+			extreme = mid
+			if findMax {
+				b = mid+1
+			} else {
+				e = mid-1
+			}
+		} else if nums[mid] < target {
+			b = mid + 1
+		} else if nums[mid] > target {
+			e = mid - 1
+		}
+	}
+
+	return extreme
+}

@@ -1,14 +1,23 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+)
 
 func main() {
-	var s = []int{1, 2}
-	s1 := &s
-	*s1 = append(*s1, 5)
-	fmt.Println(s)
-	fmt.Println(s1)
+	s := make([]int, 2, 3)
+	s[0]=1
+	s[1]=2
 
+	for _, i := range s {
+		fmt.Println(i)
+
+		for j := 0; j < 1; j++ {
+			s = append(s, j)
+		}
+		s[1] = 111111
+		fmt.Println(s)
+	}
 }
 
 type (

@@ -26,6 +26,7 @@ func main() {
 	//t1.Right = &t2
 	//t2.Left = &t3
 	//fmt.Println(preorderTraversal2(&t1))
-
-	fmt.Println(solveNQueens(4))
+	d := []string{"8887","8889","8878","8898","8788","8988","7888","9888"}
+	t := "8888"
+	fmt.Println(openLock(d,t))
 }
