@@ -625,9 +625,9 @@ func searchExtremeValue(nums []int, target int, findMax bool) int {
 		if nums[mid] == target {
 			extreme = mid
 			if findMax {
-				b = mid+1
+				b = mid + 1
 			} else {
-				e = mid-1
+				e = mid - 1
 			}
 		} else if nums[mid] < target {
 			b = mid + 1
@@ -637,4 +637,47 @@ func searchExtremeValue(nums []int, target int, findMax bool) int {
 	}
 
 	return extreme
+}
+
+//最小覆盖子串：https://leetcode-cn.com/problems/minimum-window-substring/
+func minWindow(s string, t string) string {
+	counts := make(map[uint8]int)
+	for i := range t {
+		counts[t[i]] = 0
+	}
+	b, e := 0, len(s)
+	i, j := 0, 0
+	headForward := true
+	for j < len(s) || hasSubString(counts) {
+		if headForward {
+			if _, ok := counts[s[j]]; ok {
+				counts[s[j]]++
+			}
+			if hasSubString(counts) {
+				if j-i < e-b {
+					b, e = i, j
+				}
+				headForward = false
+			}
+			j++
+		} else {
+			if _, ok := counts[s[i]]; ok {
+				counts[s[i]]--
+			}
+			if hasSubString(counts) {
+				if j-i < e-b {
+					b, e = i, j
+				}
+			}
+		}
+	}
+}
+
+func hasSubString(counts map[uint8]int) bool {
+	for _, c := range counts {
+		if c == 0 {
+			return false
+		}
+	}
+	return true
 }
