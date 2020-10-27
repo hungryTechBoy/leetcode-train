@@ -640,44 +640,103 @@ func searchExtremeValue(nums []int, target int, findMax bool) int {
 }
 
 //最小覆盖子串：https://leetcode-cn.com/problems/minimum-window-substring/
+//滑动窗口计算
 func minWindow(s string, t string) string {
 	counts := make(map[uint8]int)
 	for i := range t {
 		counts[t[i]] = 0
 	}
-	b, e := 0, len(s)
+	origin := originCounts(t)
+	b, e := 0, len(s)+1
 	i, j := 0, 0
 	headForward := true
-	for j < len(s) || hasSubString(counts) {
+	for j < len(s) || hasSubString(counts, origin) {
 		if headForward {
 			if _, ok := counts[s[j]]; ok {
 				counts[s[j]]++
 			}
-			if hasSubString(counts) {
+			j++
+			if hasSubString(counts, origin) {
 				if j-i < e-b {
 					b, e = i, j
 				}
 				headForward = false
 			}
-			j++
 		} else {
 			if _, ok := counts[s[i]]; ok {
 				counts[s[i]]--
 			}
-			if hasSubString(counts) {
+			i++
+			if hasSubString(counts, origin) {
 				if j-i < e-b {
 					b, e = i, j
 				}
+			} else {
+				headForward = true
 			}
 		}
 	}
-}
 
-func hasSubString(counts map[uint8]int) bool {
-	for _, c := range counts {
-		if c == 0 {
+	if e-b == len(s)+1 {
+		return ""
+	} else {
+		return s[b:e]
+	}
+}
+func originCounts(t string) map[uint8]int {
+	counts := make(map[uint8]int)
+	for i := range t {
+		counts[t[i]]++
+	}
+	return counts
+}
+func hasSubString(counts, origin map[uint8]int) bool {
+	for k, c := range origin {
+		if c > counts[k] {
 			return false
 		}
 	}
 	return true
+}
+
+func minWindow2(s string, t string) string {
+	origin := originCounts(t)
+	counts := make(map[uint8]int)
+	shrink := false
+	b, e := 0, len(s)+1
+	i, j := 0, 0
+	for j < len(s) {
+		cur := s[j]
+		if _, ok := origin[cur]; ok {
+			counts[cur]++
+		}
+		j++//位置不能随意移动
+		if hasSubString(counts, origin) {
+			if j-i < e-b {
+				b, e = i, j
+			}
+			shrink = true
+		}
+
+		for shrink {
+			cur := s[i]
+			if _, ok := origin[cur]; ok {
+				counts[cur]--
+			}
+			i++
+			if hasSubString(counts, origin) {
+				if j-i < e-b {
+					b, e = i, j
+				}
+			} else {
+				shrink = false
+			}
+		}
+	}
+	if e-b == len(s)+1 {
+		return ""
+	} else {
+		return s[b:e]
+	}
+
 }
