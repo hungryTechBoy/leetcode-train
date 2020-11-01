@@ -41,3 +41,34 @@ func Abs(i int) int {
 	}
 	return i
 }
+
+func MaxSliceValue(s []int) int {
+	var max int
+	for _, n := range s {
+		if n > max {
+			max = n
+		}
+	}
+	return max
+}
+
+func SumIntSlice(s []int) (res int) {
+	for _, ss := range s {
+		res += ss
+	}
+	return
+}
+
+func IntSliceEqual(a, b []int) bool {
+	if len(a) != len(b) {
+		return false
+	}
+
+	for i, v := range a {
+		if v != b[i] {
+			return false
+		}
+	}
+
+	return true
+}

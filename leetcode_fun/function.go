@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	"sort"
 	"strings"
 )
 
@@ -710,7 +711,7 @@ func minWindow2(s string, t string) string {
 		if _, ok := origin[cur]; ok {
 			counts[cur]++
 		}
-		j++//位置不能随意移动
+		j++ //位置不能随意移动
 		if hasSubString(counts, origin) {
 			if j-i < e-b {
 				b, e = i, j
@@ -739,4 +740,240 @@ func minWindow2(s string, t string) string {
 		return s[b:e]
 	}
 
+}
+
+// 买卖股票的最佳时机 IV:https://leetcode-cn.com/problems/best-time-to-buy-and-sell-stock-iv/
+//此解法超时，需要优化
+//func maxProfit(k int, prices []int) int {
+//	if len(prices) < 2 {
+//		return 0
+//	}
+//	curMax := math.MinInt32
+//	for i := range prices {
+//		subSlice := prices[i:]
+//		findMaxProfit(k, subSlice, 0, 0, &curMax)
+//	}
+//	return curMax
+//}
+//
+//func findMaxProfit(k int, prices []int, profit int, n int, curMax *int) {
+//	if profit > *curMax {
+//		*curMax = profit
+//	}
+//
+//	if n/2 >= k {
+//		return
+//	}
+//
+//	n++
+//	first := prices[0]
+//	for i, p := range prices[1:] {
+//		var curProfit = profit
+//		if n%2 == 1 {
+//			curProfit += p - first
+//		}
+//		sub := prices[i+1:]
+//		findMaxProfit(k, sub, curProfit, n, curMax)
+//	}
+//}
+
+//打家劫舍 II：https://leetcode-cn.com/problems/house-robber-ii/
+//动态规划
+func rob(nums []int) int {
+	if len(nums) < 2 {
+		return findMaxRobMoney(nums)
+	}
+	max1 := findMaxRobMoney(nums[:len(nums)-1])
+	max2 := findMaxRobMoney(nums[1:])
+
+	return Max(max2, max1)
+}
+
+func findMaxRobMoney(nums []int) int {
+	b1 := 0
+	b2 := 0
+	for _, num := range nums {
+		tmp := b2
+		b2 = Max(b2, b1+num)
+		b1 = tmp
+	}
+	return b2
+}
+
+//删除被覆盖区间:https://leetcode-cn.com/problems/remove-covered-intervals/
+func removeCoveredIntervals(intervals [][]int) int {
+	sort.Slice(intervals, func(i, j int) bool {
+		if intervals[i][0] < intervals[j][0] {
+			return true
+		} else if intervals[i][0] > intervals[j][0] {
+			return false
+		} else {
+			if intervals[i][1] >= intervals[j][1] {
+				return true
+			} else {
+				return false
+			}
+		}
+	})
+	count := 1
+out:
+	for i, inter := range intervals[1:] {
+		for _, val := range intervals[:i+1] {
+			if inter[0] >= val[0] && inter[1] <= val[1] {
+				continue out
+			}
+		}
+
+		count++
+	}
+
+	return count
+}
+
+func removeCoveredIntervals2(intervals [][]int) int {
+	sort.Slice(intervals, func(i, j int) bool {
+		if intervals[i][0] < intervals[j][0] {
+			return true
+		} else if intervals[i][0] > intervals[j][0] {
+			return false
+		} else {
+			if intervals[i][1] >= intervals[j][1] {
+				return true
+			} else {
+				return false
+			}
+		}
+	})
+	count := 1
+	beg, end := intervals[0][0], intervals[0][1]
+	for _, inter := range intervals[1:] {
+		switch {
+		case inter[0] >= beg && inter[1] <= end:
+			continue
+		case inter[1] > end:
+			beg, end = inter[0], inter[1]
+		}
+		count++
+	}
+
+	return count
+}
+
+//四数之和:https://leetcode-cn.com/problems/4sum/
+func fourSum(nums []int, target int) (res [][]int) {
+	sort.Ints(nums)
+	rr := kSum(nums, target, 4)
+
+	//去重
+	sort.Slice(rr, func(i, j int) bool {
+		r := rr
+		sort.Ints(r[i])
+		sort.Ints(r[j])
+		for k := range r[i] {
+			if r[i][k] < r[j][k] {
+				return true
+			} else if r[i][k] > r[j][k] {
+				return false
+			}
+		}
+		return true
+	})
+
+	var rres [][]int
+	for _, v := range rr {
+		if len(rres) == 0 || (len(rres) > 0 && !IntSliceEqual(v, rres[len(rres)-1])) {
+			rres = append(rres, v)
+		}
+	}
+
+	return rres
+}
+
+func kSum(nums []int, target int, k int) (res [][]int) {
+	if k == 2 {
+		return twoSum(nums, target)
+	}
+	for i, val := range nums {
+		if i > 0 && val == nums[i-1] {
+			continue
+		}
+		var subNums []int
+		subNums = append(subNums, nums[:i]...)
+		subNums = append(subNums, nums[i+1:]...)
+		k1Sum := kSum(subNums, target-val, k-1)
+		for i := range k1Sum {
+			k1Sum[i] = append(k1Sum[i], val)
+		}
+
+		res = append(res, k1Sum...)
+	}
+	return
+
+}
+
+func twoSum(nums []int, target int) (res [][]int) {
+	for i, j := 0, len(nums)-1; i < j; {
+		tmp := nums[i] + nums[j]
+		if tmp > target {
+			j--
+		} else if tmp < target {
+			i++
+		} else {
+			if len(res) > 0 && res[len(res)-1][0] == nums[i] && res[len(res)-1][1] == nums[j] {
+				i++
+				j--
+				continue
+			}
+			var r []int
+			r = append(r, nums[i], nums[j])
+			res = append(res, r)
+		}
+	}
+
+	return
+}
+
+//鸡蛋掉落：https://leetcode-cn.com/problems/super-egg-drop/
+//动态规划+二分法
+func superEggDrop(K int, N int) int {
+	memo := make(map[[2]int]int)
+	return superEggDropDp(K, N, memo)
+}
+
+func superEggDropDp(K int, N int, memo map[[2]int]int) int {
+	if K == 1 {
+		return N
+	}
+	if N == 0 {
+		return 0
+	}
+	if val, ok := memo[[2]int{K, N}]; ok {
+		return val
+	}
+
+	var min = math.MaxInt32
+	var minVal = math.MaxInt32
+
+	for i, j := 1, N; i <= j; {
+		mid := (i + j) / 2
+		rg := superEggDropDp(K, N-mid, memo)
+		lf := superEggDropDp(K-1, mid-1, memo)
+
+		if rg > lf {
+			i = mid + 1
+		} else if rg < lf {
+			j = mid - 1
+		} else {
+			min = rg
+			break
+		}
+		if Abs(rg-lf) < minVal {
+			minVal = Abs(rg - lf)
+			min = Max(rg, lf)
+		}
+	}
+
+	min += 1
+	memo[[2]int{K, N}] = min
+	return min
 }
