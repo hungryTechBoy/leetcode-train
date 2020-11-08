@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -977,3 +978,135 @@ func superEggDropDp(K int, N int, memo map[[2]int]int) int {
 	memo[[2]int{K, N}] = min
 	return min
 }
+
+//寻找重复的子树:https://leetcode-cn.com/problems/find-duplicate-subtrees/
+func findDuplicateSubtrees(root *TreeNode) (res []*TreeNode) {
+	seqMap := make(map[string]NodeCounter)
+	preTraverseSearch(root, seqMap)
+	for _, val := range seqMap {
+		if val.count > 1 {
+			res = append(res, val.node)
+		}
+	}
+
+	return
+}
+
+func preTraverseSearch(node *TreeNode, seqMap map[string]NodeCounter) string {
+	if node == nil {
+		return "#"
+	}
+
+	left := preTraverseSearch(node.Left, seqMap)
+	right := preTraverseSearch(node.Right, seqMap)
+	seqStr := strings.Join([]string{strconv.Itoa(node.Val), left, right}, ".") //不能去掉分隔符，因为数与数之间可能重叠
+
+	counter := seqMap[seqStr]
+	counter.count += 1
+	counter.node = node
+	seqMap[seqStr] = counter
+
+	return seqStr
+}
+
+type NodeCounter struct {
+	node  *TreeNode
+	count int
+}
+
+//分割等和子集:https://leetcode-cn.com/problems/partition-equal-subset-sum/
+func canPartition(nums []int) bool {
+	sum := SumIntSlice(nums)
+	if sum%2 == 1 {
+		return false
+	}
+	sum /= 2
+	length := len(nums)
+
+	var dp = make([][]bool, length+1)
+	for i := range dp {
+		dp[i] = make([]bool, sum+1)
+	}
+
+	for _, s := range dp[1:] {
+		s[0] = true
+	}
+
+	for i, val := range nums {
+		for j := 1; j <= sum; j++ {
+			if j-val < 0 {
+				dp[i+1][j] = dp[i][j]
+			} else {
+				dp[i+1][j] = dp[i][j] || dp[i][j-val]
+			}
+		}
+	}
+
+	return dp[length][sum]
+}
+
+//零钱兑换 II:https://leetcode-cn.com/problems/coin-change-2/
+func change(amount int, coins []int) int {
+	dp := make([][]int, len(coins)+1)
+	for i := range dp {
+		dp[i] = make([]int, amount+1)
+		dp[i][0] = 1
+	}
+
+	for i, value := range coins {
+		for j := 1; j <= amount; j++ {
+			if j >= value {
+				//for n := j; n >= 0; n -= value {
+				//	dp[i+1][j] += dp[i][n]
+				//}
+				dp[i+1][j] = dp[i][j] + dp[i+1][j-value]
+			} else {
+				dp[i+1][j] += dp[i][j]
+			}
+		}
+	}
+
+	return dp[len(coins)][amount]
+}
+
+//反转链表 II:https://leetcode-cn.com/problems/reverse-linked-list-ii/
+func reverseBetween(head *ListNode, m int, n int) *ListNode {
+	var p, h *ListNode = nil, head
+	for i := 0; i < m-1; i++ {
+		if i == m-2 {
+			p = h
+		}
+		h = h.Next
+	}
+	h1 := reverseList(h, n-m)
+	if p != nil {
+		p.Next = h1
+	} else {
+		head = h1 //说明翻转整个链表
+	}
+	return head
+}
+
+func reverseList(head *ListNode, n int) *ListNode {
+	if n == 0 {
+		return head
+	}
+	last := reverseList(head.Next, n-1)
+	tmp := head.Next.Next
+	head.Next.Next = head
+	head.Next = tmp
+	return last
+}
+
+//for循环翻转单个链表：https://leetcode-cn.com/problems/fan-zhuan-lian-biao-lcof/
+func reverseList2(head *ListNode) *ListNode {
+	var hh *ListNode = nil
+	for h := head; h != nil; {
+		tmp := h.Next
+		h.Next = hh
+		hh = h
+		h = tmp
+	}
+	return hh
+}
+

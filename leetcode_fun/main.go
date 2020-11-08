@@ -30,6 +30,6 @@ func main() {
 	//t := "8888"
 	//prices := {}int{48,12,60,93,97,42,25,64,17,56,85,93,9,48,52,42,58,85,81,84,69,36,1,54,23,15,72,15,11,94}
 	//fmt.Println(maxProfit(7, prices))
-	s := []int{1, 0, -1, 0, -2, 2}
-	fmt.Println(fourSum2(s, 0))
+	s := []int{1, 2, 5}
+	fmt.Println(change(5, s))
 }
