@@ -30,6 +30,7 @@ func main() {
 	//t := "8888"
 	//prices := {}int{48,12,60,93,97,42,25,64,17,56,85,93,9,48,52,42,58,85,81,84,69,36,1,54,23,15,72,15,11,94}
 	//fmt.Println(maxProfit(7, prices))
-	s := []int{1, 2, 5}
-	fmt.Println(change(5, s))
+	s := []int{3,9,20,15,7}
+	ss := []int{9,3,15,20,7}
+	fmt.Println(buildTree(s,ss))
 }

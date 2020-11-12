@@ -72,3 +72,12 @@ func IntSliceEqual(a, b []int) bool {
 
 	return true
 }
+
+func FindIntSliceIndex(list []int, val int) int {
+	for i, l := range list {
+		if val == l {
+			return i
+		}
+	}
+	return -1
+}

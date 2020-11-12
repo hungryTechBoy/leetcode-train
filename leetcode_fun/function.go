@@ -1110,3 +1110,450 @@ func reverseList2(head *ListNode) *ListNode {
 	return hh
 }
 
+//回文链表：https://leetcode-cn.com/problems/palindrome-linked-list/
+func isPalindrome(head *ListNode) bool {
+	if head == nil {
+		return true
+	}
+	mid, isEven := findMidNode(head)
+	h := reverseListFromMid(head, mid)
+
+	if !isEven {
+		mid = mid.Next
+	}
+	for m, p := mid, h; m != nil; m, p = m.Next, p.Next {
+		if m.Val != p.Val {
+			return false
+		}
+	}
+
+	return true
+}
+
+func findMidNode(head *ListNode) (*ListNode, bool) {
+	slow, fast := head, head
+	for fast != nil && fast.Next != nil {
+		fast = fast.Next.Next
+		slow = slow.Next
+	}
+	if fast == nil {
+		return slow, true
+	}
+	return slow, false
+}
+
+func reverseListFromMid(head *ListNode, mid *ListNode) *ListNode {
+	h := mid
+	for hh := head; hh != mid; {
+		tmp := hh.Next
+		hh.Next = h
+		h = hh
+		hh = tmp
+	}
+	return h
+}
+
+//翻转二叉树:https://leetcode-cn.com/problems/invert-binary-tree/
+func invertTree(root *TreeNode) *TreeNode {
+	if root == nil {
+		return root
+	}
+	invertTree(root.Left)
+	invertTree(root.Right)
+	root.Left, root.Right = root.Right, root.Left
+	return root
+}
+
+type Node struct {
+	Val   int
+	Left  *Node
+	Right *Node
+	Next  *Node
+}
+
+//填充每个节点的下一个右侧节点指针：https://leetcode-cn.com/problems/populating-next-right-pointers-in-each-node/
+func connect(root *Node) *Node {
+	if root == nil {
+		return root
+	}
+	for l, r := root.Left, root.Right; l != nil && r != nil; l, r = l.Right, r.Left {
+		l.Next = r
+	}
+
+	connect(root.Left)
+	connect(root.Right)
+	return root
+}
+
+//二叉树展开为链表:https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/
+func flatten(root *TreeNode) {
+	if root == nil {
+		return
+	}
+	flatten(root.Left)
+	flatten(root.Right)
+	tmp := root.Right
+	root.Right = root.Left
+	r := root
+	for ; r.Right != nil; r = r.Right {
+	}
+	r.Right = tmp
+	root.Left = nil
+}
+
+//最大二叉树：https://leetcode-cn.com/problems/maximum-binary-tree/
+func constructMaximumBinaryTree(nums []int) *TreeNode {
+	if len(nums) == 0 {
+		return nil
+	}
+
+	var index, max = math.MinInt32, math.MinInt32
+	for i, val := range nums {
+		if val > max {
+			max = val
+			index = i
+		}
+	}
+
+	left := constructMaximumBinaryTree(nums[:index])
+	right := constructMaximumBinaryTree(nums[index+1:])
+
+	return &TreeNode{Val: max, Left: left, Right: right}
+}
+
+//从前序与中序遍历序列构造二叉树:https://leetcode-cn.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/
+func buildTree(preorder []int, inorder []int) *TreeNode {
+	if len(preorder) == 0 {
+		return nil
+	}
+
+	index := FindIntSliceIndex(inorder, preorder[0])
+	left := buildTree(preorder[1:index+1], inorder[:index])
+	right := buildTree(preorder[index+1:], inorder[index+1:])
+
+	return &TreeNode{
+		Val:   preorder[0],
+		Left:  left,
+		Right: right,
+	}
+}
+
+//二叉搜索树中第K小的元素:https://leetcode-cn.com/problems/kth-smallest-element-in-a-bst/
+func kthSmallest(root *TreeNode, k int) int {
+	seq := inorderTraversal(root)
+	return seq[k-1]
+}
+
+//把二叉搜索树转换为累加树:https://leetcode-cn.com/problems/convert-bst-to-greater-tree/
+func convertBST(root *TreeNode) *TreeNode {
+	seq := inorderTraversal(root)
+	var sum int
+	valToSum := make(map[int]int)
+	for i := len(seq) - 1; i >= 0; i-- {
+		sum += seq[i]
+		valToSum[seq[i]] = sum
+	}
+	doConvertBST(root, valToSum)
+	return root
+}
+
+func doConvertBST(root *TreeNode, valToSum map[int]int) {
+	if root == nil {
+		return
+	}
+	root.Val = valToSum[root.Val]
+	doConvertBST(root.Left, valToSum)
+	doConvertBST(root.Right, valToSum)
+}
+
+func convertBST2(root *TreeNode) *TreeNode {
+	doConvertBST2(root, 0)
+	return root
+}
+
+func doConvertBST2(root *TreeNode, sum int) int {
+	if root == nil {
+		return sum
+	}
+
+	root.Val += doConvertBST2(root.Right, sum)
+	return doConvertBST2(root.Left, root.Val)
+}
+
+//删除二叉搜索树中的节点:https://leetcode-cn.com/problems/delete-node-in-a-bst/
+func deleteNode(root *TreeNode, key int) *TreeNode {
+	pre, n, isLeft := findBSTNode(root, key)
+	if n == nil {
+		return root
+	}
+	var son *TreeNode
+
+	if n.Right == nil {
+		son = n.Left
+	} else if n.Right.Left == nil {
+		son = n.Right
+		son.Left = n.Left
+	} else {
+		left := n.Right
+		leftMost := n.Right.Left
+		for leftMost.Left != nil {
+			leftMost = leftMost.Left
+			left = left.Left
+		}
+
+		left.Left = leftMost.Right
+		leftMost.Left, leftMost.Right = n.Left, n.Right
+		son = leftMost
+	}
+
+	if pre != nil {
+		if isLeft {
+			pre.Left = son
+		} else {
+			pre.Right = son
+		}
+	} else {
+		root = son //如果查找恰好是根节点，那么根节点需要改变
+	}
+
+	return root
+}
+
+func findBSTNode(root *TreeNode, key int) (*TreeNode, *TreeNode, bool) {
+	var pre *TreeNode
+	var isLeft bool
+	for root != nil {
+		if root.Val == key {
+			return pre, root, isLeft
+		} else if root.Val > key {
+			pre = root
+			isLeft = true
+			root = root.Left
+		} else if root.Val < key {
+			pre = root
+			isLeft = false
+			root = root.Right
+		}
+	}
+	return nil, nil, isLeft
+}
+
+//二叉搜索树中的插入操作:https://leetcode-cn.com/problems/insert-into-a-binary-search-tree/
+func insertIntoBST(root *TreeNode, val int) *TreeNode {
+	if root == nil {
+		return &TreeNode{Val: val}
+	}
+	if root.Val < val {
+		root.Right = insertIntoBST(root.Right, val)
+	} else {
+		root.Left = insertIntoBST(root.Left, val)
+	}
+	return root
+}
+
+func insertIntoBST2(root *TreeNode, val int) *TreeNode {
+	if root == nil {
+		return &TreeNode{Val: val}
+	}
+	if root.Left == nil && root.Val > val {
+		root.Left = &TreeNode{Val: val}
+		return root
+	}
+	if root.Right == nil && root.Val < val {
+		root.Right = &TreeNode{Val: val}
+		return root
+	}
+	if root.Val < val {
+		insertIntoBST2(root.Right, val)
+	} else {
+		insertIntoBST2(root.Left, val)
+	}
+	return root
+}
+
+//扁平化嵌套列表迭代器:https://leetcode-cn.com/problems/flatten-nested-list-iterator/
+//递归解法，比较慢
+//type NestedIterator struct {
+//	list []int
+//	loc  int
+//}
+//
+//func iteration(nestedList []*NestedInteger) []int {
+//	var res []int
+//	for _, l := range nestedList {
+//		if l.IsInteger() {
+//			res = append(res, l.GetInteger())
+//			continue
+//		}
+//		res = append(res, iteration(l.GetList())...)
+//	}
+//	return res
+//}
+//
+//func Constructor(nestedList []*NestedInteger) *NestedIterator {
+//	return &NestedIterator{list: iteration(nestedList)}
+//}
+//
+//func (this *NestedIterator) Next() int {
+//	if this.HasNext() {
+//		this.loc++
+//		return this.list[this.loc-1]
+//	}
+//	return -1
+//}
+//
+//func (this *NestedIterator) HasNext() bool {
+//	if this.loc < len(this.list) {
+//		return true
+//	}
+//
+//	return false
+//}
+
+//惰性取数据
+type NestedIterator struct {
+	list []*NestedInteger
+}
+
+func Constructor(nestedList []*NestedInteger) *NestedIterator {
+	return &NestedIterator{list: nestedList}
+}
+
+func (this *NestedIterator) Next() int {
+	res := this.list[0].GetInteger()
+	this.list = this.list[1:]
+	return res
+}
+
+func (this *NestedIterator) HasNext() bool {
+	for len(this.list) > 0 && !this.list[0].IsInteger() {
+		ll := this.list[0].GetList()
+		this.list = append(ll, this.list[1:]...)
+	}
+
+	return len(this.list) != 0
+}
+
+//二叉树的最近公共祖先:https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/
+func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
+	if root == nil {
+		return nil
+	}
+
+	left := lowestCommonAncestor(root.Left, p, q)
+	right := lowestCommonAncestor(root.Right, p, q)
+
+	if left != nil && right != nil {
+		return root
+	}
+	if root.Val == p.Val || root.Val == q.Val {
+		return root
+	}
+	if left != nil {
+		return left
+	}
+
+	if right != nil {
+		return right
+	}
+
+	return nil
+}
+
+//完全二叉树的节点个数：https://leetcode-cn.com/problems/count-complete-tree-nodes/
+func countNodes(root *TreeNode) int {
+	if root == nil {
+		return 0
+	}
+	return countNodes(root.Left) + countNodes(root.Right) + 1
+}
+
+//LRU缓存机制：https://leetcode-cn.com/problems/lru-cache/
+type LRUCache struct {
+	cache      map[int]*LRUnode
+	capacity   int
+	head, tail *LRUnode
+}
+type LRUnode struct {
+	val   int
+	key   int
+	count int //访问次数
+	pre   *LRUnode
+	next  *LRUnode
+}
+
+func Constructor(capacity int) LRUCache {
+	cache := make(map[int]*LRUnode)
+	return LRUCache{
+		cache:    cache,
+		capacity: capacity,
+	}
+}
+
+func (this *LRUCache) Get(key int) int {
+	n := this.cache[key]
+	if n == nil {
+		return -1
+	}
+	n.count++
+
+	var end *LRUnode
+	for end = n.next; end != nil && end.val < n.val; end = end.next {
+	}
+	//说明原本在头部
+	if n.next == nil {
+		return n.val
+	}
+
+	if n.pre == nil {
+		n.next.pre = nil
+		this.tail = n.next
+		n.next = nil
+	}
+
+	if end == nil {
+		this.tail.next = n
+		n.pre = this.tail
+		this.tail = n
+		return n.val
+	}
+
+	end.pre.next = n
+	n.pre = end.pre
+	n.next = end
+	end.pre = n
+
+	return n.val
+
+}
+
+func (this *LRUCache) Put(key int, value int) {
+	if n, ok := this.cache[key]; ok {
+		n.val = value
+		return
+	}
+	if len(this.cache) >= this.capacity {
+		this.delHeadNode()
+	}
+
+	nn := &LRUnode{
+		val:  value,
+		key:  key,
+		next: this.head,
+	}
+	this.head = nn
+	if this.tail == nil {
+		this.tail = this.head
+	}
+	this.cache[key] = nn
+}
+
+func (this *LRUCache) delHeadNode() {
+	if this.head == nil {
+		return
+	}
+	tmp := this.head
+	this.head = this.head.next
+	this.head.pre = nil
+	delete(this.cache, tmp.key)
+}
