@@ -3,12 +3,9 @@ package main
 import "fmt"
 
 func main() {
-	ss := make(map[string]tettest)
-	tt := tettest{}
-	ss["s"] = tt
-	tt.val=5
-	fmt.Println(ss)
-
+	a, b := 1, 2
+	a, b = a+b, a+b
+	fmt.Println(a,b)
 }
 
 type tettest struct {

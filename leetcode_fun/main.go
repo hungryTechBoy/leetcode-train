@@ -30,7 +30,33 @@ func main() {
 	//t := "8888"
 	//prices := {}int{48,12,60,93,97,42,25,64,17,56,85,93,9,48,52,42,58,85,81,84,69,36,1,54,23,15,72,15,11,94}
 	//fmt.Println(maxProfit(7, prices))
-	s := []int{3,9,20,15,7}
-	ss := []int{9,3,15,20,7}
-	fmt.Println(buildTree(s,ss))
+	//s := []int{3,9,20,15,7}
+	//ss := []int{9,3,15,20,7}
+	//fmt.Println(buildTree(s,ss))
+
+	//lRUCache := Constructor(2)
+	//lRUCache.Put(1, 1)           // 缓存是 {1=1}
+	//lRUCache.Put(2, 2)           // 缓存是 {1=1, 2=2}
+	//fmt.Println(lRUCache.Get(1)) // 返回 1
+	//lRUCache.Put(3, 3)          // 该操作会使得关键字 2 作废，缓存是 {1=1, 3=3}
+	//fmt.Println(lRUCache.Get(2)) // 返回 -1 (未找到)
+	//lRUCache.Put(4, 4)           // 该操作会使得关键字 1 作废，缓存是 {4=4, 3=3}
+	//fmt.Println(lRUCache.Get(1)) // 返回 -1 (未找到)
+	//fmt.Println(lRUCache.Get(3)) // 返回 3
+	//fmt.Println(lRUCache.Get(4)) // 返回 4
+	p := PriorityQueue{
+		isBigHeap: false,
+	}
+	p.addNum(1)
+	fmt.Println(p.list)
+	p.addNum(4)
+	p.addNum(2)
+	p.addNum(3)
+
+	fmt.Println(p.list)
+	fmt.Println(p.fetchHead())
+	fmt.Println(p.fetchHead())
+	fmt.Println(p.fetchHead())
+	fmt.Println(p.fetchHead())
+	fmt.Println(p.fetchHead())
 }

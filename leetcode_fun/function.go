@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ListNode struct {
@@ -1411,28 +1412,28 @@ func insertIntoBST2(root *TreeNode, val int) *TreeNode {
 //}
 
 //惰性取数据
-type NestedIterator struct {
-	list []*NestedInteger
-}
-
-func Constructor(nestedList []*NestedInteger) *NestedIterator {
-	return &NestedIterator{list: nestedList}
-}
-
-func (this *NestedIterator) Next() int {
-	res := this.list[0].GetInteger()
-	this.list = this.list[1:]
-	return res
-}
-
-func (this *NestedIterator) HasNext() bool {
-	for len(this.list) > 0 && !this.list[0].IsInteger() {
-		ll := this.list[0].GetList()
-		this.list = append(ll, this.list[1:]...)
-	}
-
-	return len(this.list) != 0
-}
+//type NestedIterator struct {
+//	list []*NestedInteger
+//}
+//
+//func Constructor(nestedList []*NestedInteger) *NestedIterator {
+//	return &NestedIterator{list: nestedList}
+//}
+//
+//func (this *NestedIterator) Next() int {
+//	res := this.list[0].GetInteger()
+//	this.list = this.list[1:]
+//	return res
+//}
+//
+//func (this *NestedIterator) HasNext() bool {
+//	for len(this.list) > 0 && !this.list[0].IsInteger() {
+//		ll := this.list[0].GetList()
+//		this.list = append(ll, this.list[1:]...)
+//	}
+//
+//	return len(this.list) != 0
+//}
 
 //二叉树的最近公共祖先:https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/
 func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
@@ -1475,11 +1476,10 @@ type LRUCache struct {
 	head, tail *LRUnode
 }
 type LRUnode struct {
-	val   int
-	key   int
-	count int //访问次数
-	pre   *LRUnode
-	next  *LRUnode
+	val  int
+	key  int
+	pre  *LRUnode
+	next *LRUnode
 }
 
 func Constructor(capacity int) LRUCache {
@@ -1495,34 +1495,9 @@ func (this *LRUCache) Get(key int) int {
 	if n == nil {
 		return -1
 	}
-	n.count++
 
-	var end *LRUnode
-	for end = n.next; end != nil && end.val < n.val; end = end.next {
-	}
-	//说明原本在头部
-	if n.next == nil {
-		return n.val
-	}
-
-	if n.pre == nil {
-		n.next.pre = nil
-		this.tail = n.next
-		n.next = nil
-	}
-
-	if end == nil {
-		this.tail.next = n
-		n.pre = this.tail
-		this.tail = n
-		return n.val
-	}
-
-	end.pre.next = n
-	n.pre = end.pre
-	n.next = end
-	end.pre = n
-
+	this.delOneNode(n)
+	this.insertNode(n, nil)
 	return n.val
 
 }
@@ -1530,30 +1505,368 @@ func (this *LRUCache) Get(key int) int {
 func (this *LRUCache) Put(key int, value int) {
 	if n, ok := this.cache[key]; ok {
 		n.val = value
+		this.delOneNode(n)
+		this.insertNode(n, nil)
 		return
 	}
 	if len(this.cache) >= this.capacity {
-		this.delHeadNode()
+		n := this.delOneNode(this.head)
+		delete(this.cache, n.key)
 	}
 
 	nn := &LRUnode{
-		val:  value,
-		key:  key,
-		next: this.head,
+		val: value,
+		key: key,
 	}
-	this.head = nn
-	if this.tail == nil {
-		this.tail = this.head
-	}
+	this.insertNode(nn, nil)
 	this.cache[key] = nn
 }
 
-func (this *LRUCache) delHeadNode() {
-	if this.head == nil {
+//双端链表删除一个节点,不删除key,返回被删除的node
+func (this *LRUCache) delOneNode(n *LRUnode) *LRUnode {
+	if n.pre == nil {
+		this.head = n.next
+	} else {
+		n.pre.next = n.next
+	}
+
+	if n.next == nil {
+		this.tail = n.pre
+	} else {
+		n.next.pre = n.pre
+	}
+
+	n.pre, n.next = nil, nil
+	return n
+}
+
+///双端链表某个node前插入一个节点，loc为nil则表示尾部插入
+func (this *LRUCache) insertNode(n *LRUnode, loc *LRUnode) {
+	if loc == nil {
+		if this.tail != nil {
+			this.tail.next = n
+			n.pre = this.tail
+		}
+		this.tail = n
+		if this.head == nil {
+			this.head = n
+		}
+	} else {
+		if loc.pre != nil {
+			loc.pre.next = n
+			n.pre = loc.pre
+		} else {
+			this.head = n
+		}
+		loc.pre = n
+		n.next = loc
+	}
+}
+
+//LFU缓存机制：https://leetcode-cn.com/problems/lfu-cache/
+type LFUCache struct {
+	cache      map[int]*LFUnode
+	capacity   int
+	head, tail *LFUnode
+}
+type LFUnode struct {
+	val   int
+	key   int
+	count int //访问次数
+	pre   *LFUnode
+	next  *LFUnode
+}
+
+func LFUConstructor(capacity int) LFUCache {
+	cache := make(map[int]*LFUnode)
+	return LFUCache{
+		cache:    cache,
+		capacity: capacity,
+	}
+}
+
+func (this *LFUCache) Get(key int) int {
+	n := this.cache[key]
+	if n == nil {
+		return -1
+	}
+	this.reSort(n)
+	return n.val
+
+}
+
+func (this *LFUCache) reSort(n *LFUnode) {
+	n.count++
+
+	var end *LFUnode
+	for end = n.next; end != nil && end.count <= n.count; end = end.next {
+	}
+
+	this.delOneNode(n)
+	this.insertNode(n, end)
+}
+
+func (this *LFUCache) Put(key int, value int) {
+	if n, ok := this.cache[key]; ok {
+		n.val = value
+		this.reSort(n)
 		return
 	}
-	tmp := this.head
-	this.head = this.head.next
-	this.head.pre = nil
-	delete(this.cache, tmp.key)
+	if this.capacity == 0 {
+		return
+	}
+	if len(this.cache) >= this.capacity {
+		n := this.delOneNode(this.head)
+		delete(this.cache, n.key)
+	}
+
+	nn := &LFUnode{
+		val: value,
+		key: key,
+	}
+	this.insertNode(nn, this.head)
+	this.reSort(nn)
+	this.cache[key] = nn
+}
+
+//双端链表删除一个节点,不删除key,返回被删除的node
+func (this *LFUCache) delOneNode(n *LFUnode) *LFUnode {
+	if n.pre == nil {
+		this.head = n.next
+	} else {
+		n.pre.next = n.next
+	}
+
+	if n.next == nil {
+		this.tail = n.pre
+	} else {
+		n.next.pre = n.pre
+	}
+
+	n.pre, n.next = nil, nil
+	return n
+}
+
+///双端链表某个node前插入一个节点，loc为nil则表示尾部插入
+func (this *LFUCache) insertNode(n *LFUnode, loc *LFUnode) {
+	if loc == nil {
+		if this.tail != nil {
+			this.tail.next = n
+			n.pre = this.tail
+		}
+		this.tail = n
+		if this.head == nil {
+			this.head = n
+		}
+	} else {
+		if loc.pre != nil {
+			loc.pre.next = n
+			n.pre = loc.pre
+		} else {
+			this.head = n
+		}
+		loc.pre = n
+		n.next = loc
+	}
+}
+
+//被围绕的区域:https://leetcode-cn.com/problems/surrounded-regions/
+func solve(board [][]byte) {
+	for i, b := range board {
+		for j := range b {
+			if i == 0 || i == len(board)-1 || j == 0 || j == len(board[0])-1 {
+				DFSBoundary(board, i, j)
+			}
+		}
+	}
+
+	for i, b := range board {
+		for j := range b {
+			if board[i][j] == 'O' {
+				board[i][j] = 'X'
+			}
+			if board[i][j] == '-' {
+				board[i][j] = 'O'
+			}
+		}
+	}
+}
+
+func beyondBoundary(board [][]byte, i, j int) bool {
+	if i < 0 || i >= len(board) || j < 0 || j >= len(board[0]) {
+		return true
+	}
+	return false
+}
+
+func DFSBoundary(board [][]byte, i, j int) {
+	if beyondBoundary(board, i, j) || board[i][j] != 'O' {
+		return
+	}
+
+	board[i][j] = '-'
+	DFSBoundary(board, i+1, j)
+	DFSBoundary(board, i-1, j)
+	DFSBoundary(board, i, j+1)
+	DFSBoundary(board, i, j-1)
+}
+
+//数据流的中位数:https://leetcode-cn.com/problems/find-median-from-data-stream/
+type PriorityQueue struct {
+	list      []int
+	isBigHeap bool
+}
+
+func (p *PriorityQueue) length() int {
+	return len(p.list)
+}
+func (p *PriorityQueue) addNum(num int) {
+	p.list = append(p.list, num)
+	var k, preK = len(p.list)/2 - 1, len(p.list) - 1
+	for ; k >= 0; k, preK = (k+1)/2-1, k {
+		if p.isBigHeap {
+			if p.list[k] < num {
+				p.list[preK] = p.list[k]
+				continue
+			}
+		} else {
+			if p.list[k] > num {
+				p.list[preK] = p.list[k]
+				continue
+
+			}
+		}
+		break
+	}
+	p.list[preK] = num
+}
+func (p *PriorityQueue) getHead() int {
+	if len(p.list) == 0 {
+		return -1
+	}
+	return p.list[0]
+}
+
+func (p *PriorityQueue) fetchHead() int {
+	if len(p.list) == 0 {
+		return -1
+	}
+	tmp := p.list[0]
+	p.list[0] = p.list[len(p.list)-1]
+	p.list = p.list[:len(p.list)-1]
+	p.adjustHead()
+	return tmp
+}
+
+func (p *PriorityQueue) adjustHead() {
+	length := len(p.list)
+	if length == 0 {
+		return
+	}
+
+	tmp := p.list[0]
+	var k, preK = 1, 0
+	for ; k < length; k, preK = 2*k+1, k {
+		if p.isBigHeap {
+			if k+1 < length && p.list[k] < p.list[k+1] {
+				k++
+			}
+			if p.list[k] > tmp {
+				p.list[preK] = p.list[k]
+				continue
+			}
+		} else {
+			if k+1 < length && p.list[k] > p.list[k+1] {
+				k++
+			}
+			if p.list[k] < tmp {
+				p.list[preK] = p.list[k]
+				continue
+			}
+		}
+		break
+	}
+	p.list[preK] = tmp
+}
+
+type MedianFinder struct {
+	smallQ, biggerQ PriorityQueue
+}
+
+/** initialize your data structure here. */
+func MedianFinderConstructor() MedianFinder {
+	return MedianFinder{
+		smallQ:  PriorityQueue{},
+		biggerQ: PriorityQueue{isBigHeap: true},
+	}
+}
+
+func (this *MedianFinder) AddNum(num int) {
+	if this.smallQ.length() < this.biggerQ.length() {
+		this.biggerQ.addNum(num)
+		this.smallQ.addNum(this.biggerQ.fetchHead())
+	} else {
+		this.smallQ.addNum(num)
+		this.biggerQ.addNum(this.smallQ.fetchHead())
+	}
+}
+
+func (this *MedianFinder) FindMedian() float64 {
+	if this.biggerQ.length() > this.smallQ.length() {
+		return float64(this.biggerQ.getHead())
+	} else {
+		return float64(this.biggerQ.getHead()+this.smallQ.getHead()) / 2
+	}
+}
+
+//设计推特:https://leetcode-cn.com/problems/design-twitter/
+type Twitter struct {
+	followMap  map[int]map[int]bool
+	twitterMap map[int][]Tweet
+}
+
+type Tweet struct {
+	id        int
+	timeStamp int64
+}
+
+/** Initialize your data structure here. */
+func TwitterConstructor() Twitter {
+	return Twitter{
+		followMap:  make(map[int]map[int]bool),
+		twitterMap: make(map[int][]Tweet),
+	}
+}
+
+/** Compose a new tweet. */
+func (this *Twitter) PostTweet(userId int, tweetId int) {
+	tweets := this.twitterMap[userId]
+	tweets = append(tweets, Tweet{tweetId, time.Now().Unix()})
+	this.twitterMap[userId] = tweets
+}
+
+/** Retrieve the 10 most recent tweet ids in the user's news feed. Each item in the news feed must be posted by users who the user followed or by the user herself. Tweets must be ordered from most recent to least recent. */
+func (this *Twitter) GetNewsFeed(userId int) []int {
+	var tweets []Tweet
+	this.twitterMap[userId]
+}
+
+/** Follower follows a followee. If the operation is invalid, it should be a no-op. */
+func (this *Twitter) Follow(followerId int, followeeId int) {
+	follower := this.followMap[followerId]
+	if follower == nil {
+		this.followMap[followerId] = make(map[int]bool)
+		follower = this.followMap[followerId]
+	}
+	follower[followeeId] = true
+}
+
+/** Follower unfollows a followee. If the operation is invalid, it should be a no-op. */
+func (this *Twitter) Unfollow(followerId int, followeeId int) {
+	follower := this.followMap[followerId]
+	if follower == nil {
+		return
+	}
+
+	delete(follower, followeeId)
 }
