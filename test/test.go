@@ -3,9 +3,13 @@ package main
 import "fmt"
 
 func main() {
-	a, b := 1, 2
-	a, b = a+b, a+b
-	fmt.Println(a,b)
+	for i:=0;i<3;i++{
+		if i==0{
+			i++
+			continue
+		}
+		fmt.Println(i)
+	}
 }
 
 type tettest struct {

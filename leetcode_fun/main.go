@@ -44,19 +44,28 @@ func main() {
 	//fmt.Println(lRUCache.Get(1)) // 返回 -1 (未找到)
 	//fmt.Println(lRUCache.Get(3)) // 返回 3
 	//fmt.Println(lRUCache.Get(4)) // 返回 4
-	p := PriorityQueue{
-		isBigHeap: false,
-	}
-	p.addNum(1)
-	fmt.Println(p.list)
-	p.addNum(4)
-	p.addNum(2)
-	p.addNum(3)
+	//
+	//ttt := TwitterConstructor()
+	//ttt.PostTweet(1,5)
+	//ttt.PostTweet(1,3)
+	//ttt.PostTweet(1,101)
+	//ttt.PostTweet(1,102)
+	//ttt.PostTweet(1,103)
+	//ttt.PostTweet(1,104)
+	//ttt.PostTweet(1,105)
+	//ttt.PostTweet(1,106)
+	//ttt.PostTweet(1,107)
+	//ttt.PostTweet(1,108)
+	//ttt.PostTweet(1,109)
+	//fmt.Println(ttt.GetNewsFeed(1))
+	//b := []int{0,1}
+	//s := SolutionConstructor(4, b)
+	//for i := 0; i < 10000; i++ {
+	//	fmt.Println(s.Pick())
+	//}
 
-	fmt.Println(p.list)
-	fmt.Println(p.fetchHead())
-	fmt.Println(p.fetchHead())
-	fmt.Println(p.fetchHead())
-	fmt.Println(p.fetchHead())
-	fmt.Println(p.fetchHead())
+	//ss:=[][]int{{1,3},{3,5},{6,7},{6,8},{8,4},{9,5}}
+	s := []int{1,2}
+	fmt.Println(findKthLargest(s, 2))
+
 }
