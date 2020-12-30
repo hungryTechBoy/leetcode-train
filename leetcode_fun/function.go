@@ -1,10 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"math"
+	"math/rand"
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type ListNode struct {
@@ -1110,73 +1113,2061 @@ func reverseList2(head *ListNode) *ListNode {
 	return hh
 }
 
-type Node struct {
-	Val    int
-	Next   *Node
-	Random *Node
-}
-
-//复杂链表的复制:https://leetcode-cn.com/problems/fu-za-lian-biao-de-fu-zhi-lcof/
-func copyRandomList(head *Node) *Node {
-	pToOrder := make(map[*Node]int)
-	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
-		pToOrder[h] = i
-	}
-
-	randonToOrder := make(map[int]int)
-	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
-		if h.Random != nil {
-			randonToOrder[i] = pToOrder[h.Random]
-		}
-	}
-
-	var hhead, tail *Node
-	orderToP := make(map[int]*Node)
-	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
-		tmp := *h
-		if i == 0 {
-			tail = &tmp
-			hhead = tail
-		} else {
-			tail.Next = &tmp
-			tail = &tmp
-		}
-		orderToP[i] = &tmp
-	}
-
-	for i, h := 0, hhead; h != nil; i, h = i+1, h.Next {
-		if val, ok := randonToOrder[i]; ok {
-			h.Random = orderToP[val]
-		}
-	}
-
-	return hhead
-
-}
-
-//深度优先遍历
-func copyRandomList2(head *Node) *Node {
-	visit := make(map[*Node]*Node)
-	return copyRandomList2DFS(head, visit)
-}
-
-func copyRandomList2DFS(head *Node, visit map[*Node]*Node) (n *Node) {
+//回文链表：https://leetcode-cn.com/problems/palindrome-linked-list/
+func isPalindrome(head *ListNode) bool {
 	if head == nil {
+		return true
+	}
+	mid, isEven := findMidNode(head)
+	h := reverseListFromMid(head, mid)
+
+	if !isEven {
+		mid = mid.Next
+	}
+	for m, p := mid, h; m != nil; m, p = m.Next, p.Next {
+		if m.Val != p.Val {
+			return false
+		}
+	}
+
+	return true
+}
+
+func findMidNode(head *ListNode) (*ListNode, bool) {
+	slow, fast := head, head
+	for fast != nil && fast.Next != nil {
+		fast = fast.Next.Next
+		slow = slow.Next
+	}
+	if fast == nil {
+		return slow, true
+	}
+	return slow, false
+}
+
+func reverseListFromMid(head *ListNode, mid *ListNode) *ListNode {
+	h := mid
+	for hh := head; hh != mid; {
+		tmp := hh.Next
+		hh.Next = h
+		h = hh
+		hh = tmp
+	}
+	return h
+}
+
+//翻转二叉树:https://leetcode-cn.com/problems/invert-binary-tree/
+func invertTree(root *TreeNode) *TreeNode {
+	if root == nil {
+		return root
+	}
+	invertTree(root.Left)
+	invertTree(root.Right)
+	root.Left, root.Right = root.Right, root.Left
+	return root
+}
+
+type Node struct {
+	Val   int
+	Left  *Node
+	Right *Node
+	Next  *Node
+}
+
+//填充每个节点的下一个右侧节点指针：https://leetcode-cn.com/problems/populating-next-right-pointers-in-each-node/
+func connect(root *Node) *Node {
+	if root == nil {
+		return root
+	}
+	for l, r := root.Left, root.Right; l != nil && r != nil; l, r = l.Right, r.Left {
+		l.Next = r
+	}
+
+	connect(root.Left)
+	connect(root.Right)
+	return root
+}
+
+//二叉树展开为链表:https://leetcode-cn.com/problems/flatten-binary-tree-to-linked-list/
+func flatten(root *TreeNode) {
+	if root == nil {
+		return
+	}
+	flatten(root.Left)
+	flatten(root.Right)
+	tmp := root.Right
+	root.Right = root.Left
+	r := root
+	for ; r.Right != nil; r = r.Right {
+	}
+	r.Right = tmp
+	root.Left = nil
+}
+
+//最大二叉树：https://leetcode-cn.com/problems/maximum-binary-tree/
+func constructMaximumBinaryTree(nums []int) *TreeNode {
+	if len(nums) == 0 {
 		return nil
 	}
 
-	if visit[head] != nil {
-		return visit[head]
+	var index, max = math.MinInt32, math.MinInt32
+	for i, val := range nums {
+		if val > max {
+			max = val
+			index = i
+		}
 	}
-	n = &Node{
-		Val: head.Val,
-	}
-	visit[head] = n
-	n.Next = copyRandomList2DFS(head.Next, visit)
-	n.Random = copyRandomList2DFS(head.Random, visit)
 
+	left := constructMaximumBinaryTree(nums[:index])
+	right := constructMaximumBinaryTree(nums[index+1:])
+
+	return &TreeNode{Val: max, Left: left, Right: right}
+}
+
+//从前序与中序遍历序列构造二叉树:https://leetcode-cn.com/problems/construct-binary-tree-from-preorder-and-inorder-traversal/
+func buildTree(preorder []int, inorder []int) *TreeNode {
+	if len(preorder) == 0 {
+		return nil
+	}
+
+	index := FindIntSliceIndex(inorder, preorder[0])
+	left := buildTree(preorder[1:index+1], inorder[:index])
+	right := buildTree(preorder[index+1:], inorder[index+1:])
+
+	return &TreeNode{
+		Val:   preorder[0],
+		Left:  left,
+		Right: right,
+	}
+}
+
+//二叉搜索树中第K小的元素:https://leetcode-cn.com/problems/kth-smallest-element-in-a-bst/
+func kthSmallest(root *TreeNode, k int) int {
+	seq := inorderTraversal(root)
+	return seq[k-1]
+}
+
+//把二叉搜索树转换为累加树:https://leetcode-cn.com/problems/convert-bst-to-greater-tree/
+func convertBST(root *TreeNode) *TreeNode {
+	seq := inorderTraversal(root)
+	var sum int
+	valToSum := make(map[int]int)
+	for i := len(seq) - 1; i >= 0; i-- {
+		sum += seq[i]
+		valToSum[seq[i]] = sum
+	}
+	doConvertBST(root, valToSum)
+	return root
+}
+
+func doConvertBST(root *TreeNode, valToSum map[int]int) {
+	if root == nil {
+		return
+	}
+	root.Val = valToSum[root.Val]
+	doConvertBST(root.Left, valToSum)
+	doConvertBST(root.Right, valToSum)
+}
+
+func convertBST2(root *TreeNode) *TreeNode {
+	doConvertBST2(root, 0)
+	return root
+}
+
+func doConvertBST2(root *TreeNode, sum int) int {
+	if root == nil {
+		return sum
+	}
+
+	root.Val += doConvertBST2(root.Right, sum)
+	return doConvertBST2(root.Left, root.Val)
+}
+
+//删除二叉搜索树中的节点:https://leetcode-cn.com/problems/delete-node-in-a-bst/
+func deleteNode(root *TreeNode, key int) *TreeNode {
+	pre, n, isLeft := findBSTNode(root, key)
+	if n == nil {
+		return root
+	}
+	var son *TreeNode
+
+	if n.Right == nil {
+		son = n.Left
+	} else if n.Right.Left == nil {
+		son = n.Right
+		son.Left = n.Left
+	} else {
+		left := n.Right
+		leftMost := n.Right.Left
+		for leftMost.Left != nil {
+			leftMost = leftMost.Left
+			left = left.Left
+		}
+
+		left.Left = leftMost.Right
+		leftMost.Left, leftMost.Right = n.Left, n.Right
+		son = leftMost
+	}
+
+	if pre != nil {
+		if isLeft {
+			pre.Left = son
+		} else {
+			pre.Right = son
+		}
+	} else {
+		root = son //如果查找恰好是根节点，那么根节点需要改变
+	}
+
+	return root
+}
+
+func findBSTNode(root *TreeNode, key int) (*TreeNode, *TreeNode, bool) {
+	var pre *TreeNode
+	var isLeft bool
+	for root != nil {
+		if root.Val == key {
+			return pre, root, isLeft
+		} else if root.Val > key {
+			pre = root
+			isLeft = true
+			root = root.Left
+		} else if root.Val < key {
+			pre = root
+			isLeft = false
+			root = root.Right
+		}
+	}
+	return nil, nil, isLeft
+}
+
+//二叉搜索树中的插入操作:https://leetcode-cn.com/problems/insert-into-a-binary-search-tree/
+func insertIntoBST(root *TreeNode, val int) *TreeNode {
+	if root == nil {
+		return &TreeNode{Val: val}
+	}
+	if root.Val < val {
+		root.Right = insertIntoBST(root.Right, val)
+	} else {
+		root.Left = insertIntoBST(root.Left, val)
+	}
+	return root
+}
+
+func insertIntoBST2(root *TreeNode, val int) *TreeNode {
+	if root == nil {
+		return &TreeNode{Val: val}
+	}
+	if root.Left == nil && root.Val > val {
+		root.Left = &TreeNode{Val: val}
+		return root
+	}
+	if root.Right == nil && root.Val < val {
+		root.Right = &TreeNode{Val: val}
+		return root
+	}
+	if root.Val < val {
+		insertIntoBST2(root.Right, val)
+	} else {
+		insertIntoBST2(root.Left, val)
+	}
+	return root
+}
+
+//扁平化嵌套列表迭代器:https://leetcode-cn.com/problems/flatten-nested-list-iterator/
+//递归解法，比较慢
+//type NestedIterator struct {
+//	list []int
+//	loc  int
+//}
+//
+//func iteration(nestedList []*NestedInteger) []int {
+//	var res []int
+//	for _, l := range nestedList {
+//		if l.IsInteger() {
+//			res = append(res, l.GetInteger())
+//			continue
+//		}
+//		res = append(res, iteration(l.GetList())...)
+//	}
+//	return res
+//}
+//
+//func Constructor(nestedList []*NestedInteger) *NestedIterator {
+//	return &NestedIterator{list: iteration(nestedList)}
+//}
+//
+//func (this *NestedIterator) Next() int {
+//	if this.HasNext() {
+//		this.loc++
+//		return this.list[this.loc-1]
+//	}
+//	return -1
+//}
+//
+//func (this *NestedIterator) HasNext() bool {
+//	if this.loc < len(this.list) {
+//		return true
+//	}
+//
+//	return false
+//}
+
+//惰性取数据
+//type NestedIterator struct {
+//	list []*NestedInteger
+//}
+//
+//func Constructor(nestedList []*NestedInteger) *NestedIterator {
+//	return &NestedIterator{list: nestedList}
+//}
+//
+//func (this *NestedIterator) Next() int {
+//	res := this.list[0].GetInteger()
+//	this.list = this.list[1:]
+//	return res
+//}
+//
+//func (this *NestedIterator) HasNext() bool {
+//	for len(this.list) > 0 && !this.list[0].IsInteger() {
+//		ll := this.list[0].GetList()
+//		this.list = append(ll, this.list[1:]...)
+//	}
+//
+//	return len(this.list) != 0
+//}
+
+//二叉树的最近公共祖先:https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-tree/
+func lowestCommonAncestor(root, p, q *TreeNode) *TreeNode {
+	if root == nil {
+		return nil
+	}
+
+	left := lowestCommonAncestor(root.Left, p, q)
+	right := lowestCommonAncestor(root.Right, p, q)
+
+	if left != nil && right != nil {
+		return root
+	}
+	if root.Val == p.Val || root.Val == q.Val {
+		return root
+	}
+	if left != nil {
+		return left
+	}
+
+	if right != nil {
+		return right
+	}
+
+	return nil
+}
+
+//完全二叉树的节点个数：https://leetcode-cn.com/problems/count-complete-tree-nodes/
+func countNodes(root *TreeNode) int {
+	if root == nil {
+		return 0
+	}
+	return countNodes(root.Left) + countNodes(root.Right) + 1
+}
+
+//LRU缓存机制：https://leetcode-cn.com/problems/lru-cache/
+type LRUCache struct {
+	cache      map[int]*LRUnode
+	capacity   int
+	head, tail *LRUnode
+}
+type LRUnode struct {
+	val  int
+	key  int
+	pre  *LRUnode
+	next *LRUnode
+}
+
+func Constructor(capacity int) LRUCache {
+	cache := make(map[int]*LRUnode)
+	return LRUCache{
+		cache:    cache,
+		capacity: capacity,
+	}
+}
+
+func (this *LRUCache) Get(key int) int {
+	n := this.cache[key]
+	if n == nil {
+		return -1
+	}
+
+	this.delOneNode(n)
+	this.insertNode(n, nil)
+	return n.val
+
+}
+
+func (this *LRUCache) Put(key int, value int) {
+	if n, ok := this.cache[key]; ok {
+		n.val = value
+		this.delOneNode(n)
+		this.insertNode(n, nil)
+		return
+	}
+	if len(this.cache) >= this.capacity {
+		n := this.delOneNode(this.head)
+		delete(this.cache, n.key)
+	}
+
+	nn := &LRUnode{
+		val: value,
+		key: key,
+	}
+	this.insertNode(nn, nil)
+	this.cache[key] = nn
+}
+
+//双端链表删除一个节点,不删除key,返回被删除的node
+func (this *LRUCache) delOneNode(n *LRUnode) *LRUnode {
+	if n.pre == nil {
+		this.head = n.next
+	} else {
+		n.pre.next = n.next
+	}
+
+	if n.next == nil {
+		this.tail = n.pre
+	} else {
+		n.next.pre = n.pre
+	}
+
+	n.pre, n.next = nil, nil
 	return n
 }
+
+///双端链表某个node前插入一个节点，loc为nil则表示尾部插入
+func (this *LRUCache) insertNode(n *LRUnode, loc *LRUnode) {
+	if loc == nil {
+		if this.tail != nil {
+			this.tail.next = n
+			n.pre = this.tail
+		}
+		this.tail = n
+		if this.head == nil {
+			this.head = n
+		}
+	} else {
+		if loc.pre != nil {
+			loc.pre.next = n
+			n.pre = loc.pre
+		} else {
+			this.head = n
+		}
+		loc.pre = n
+		n.next = loc
+	}
+}
+
+//LFU缓存机制：https://leetcode-cn.com/problems/lfu-cache/
+type LFUCache struct {
+	cache      map[int]*LFUnode
+	capacity   int
+	head, tail *LFUnode
+}
+type LFUnode struct {
+	val   int
+	key   int
+	count int //访问次数
+	pre   *LFUnode
+	next  *LFUnode
+}
+
+func LFUConstructor(capacity int) LFUCache {
+	cache := make(map[int]*LFUnode)
+	return LFUCache{
+		cache:    cache,
+		capacity: capacity,
+	}
+}
+
+func (this *LFUCache) Get(key int) int {
+	n := this.cache[key]
+	if n == nil {
+		return -1
+	}
+	this.reSort(n)
+	return n.val
+
+}
+
+func (this *LFUCache) reSort(n *LFUnode) {
+	n.count++
+
+	var end *LFUnode
+	for end = n.next; end != nil && end.count <= n.count; end = end.next {
+	}
+
+	this.delOneNode(n)
+	this.insertNode(n, end)
+}
+
+func (this *LFUCache) Put(key int, value int) {
+	if n, ok := this.cache[key]; ok {
+		n.val = value
+		this.reSort(n)
+		return
+	}
+	if this.capacity == 0 {
+		return
+	}
+	if len(this.cache) >= this.capacity {
+		n := this.delOneNode(this.head)
+		delete(this.cache, n.key)
+	}
+
+	nn := &LFUnode{
+		val: value,
+		key: key,
+	}
+	this.insertNode(nn, this.head)
+	this.reSort(nn)
+	this.cache[key] = nn
+}
+
+//双端链表删除一个节点,不删除key,返回被删除的node
+func (this *LFUCache) delOneNode(n *LFUnode) *LFUnode {
+	if n.pre == nil {
+		this.head = n.next
+	} else {
+		n.pre.next = n.next
+	}
+
+	if n.next == nil {
+		this.tail = n.pre
+	} else {
+		n.next.pre = n.pre
+	}
+
+	n.pre, n.next = nil, nil
+	return n
+}
+
+///双端链表某个node前插入一个节点，loc为nil则表示尾部插入
+func (this *LFUCache) insertNode(n *LFUnode, loc *LFUnode) {
+	if loc == nil {
+		if this.tail != nil {
+			this.tail.next = n
+			n.pre = this.tail
+		}
+		this.tail = n
+		if this.head == nil {
+			this.head = n
+		}
+	} else {
+		if loc.pre != nil {
+			loc.pre.next = n
+			n.pre = loc.pre
+		} else {
+			this.head = n
+		}
+		loc.pre = n
+		n.next = loc
+	}
+}
+
+//被围绕的区域:https://leetcode-cn.com/problems/surrounded-regions/
+func solve(board [][]byte) {
+	for i, b := range board {
+		for j := range b {
+			if i == 0 || i == len(board)-1 || j == 0 || j == len(board[0])-1 {
+				DFSBoundary(board, i, j)
+			}
+		}
+	}
+
+	for i, b := range board {
+		for j := range b {
+			if board[i][j] == 'O' {
+				board[i][j] = 'X'
+			}
+			if board[i][j] == '-' {
+				board[i][j] = 'O'
+			}
+		}
+	}
+}
+
+func beyondBoundary(board [][]byte, i, j int) bool {
+	if i < 0 || i >= len(board) || j < 0 || j >= len(board[0]) {
+		return true
+	}
+	return false
+}
+
+func DFSBoundary(board [][]byte, i, j int) {
+	if beyondBoundary(board, i, j) || board[i][j] != 'O' {
+		return
+	}
+
+	board[i][j] = '-'
+	DFSBoundary(board, i+1, j)
+	DFSBoundary(board, i-1, j)
+	DFSBoundary(board, i, j+1)
+	DFSBoundary(board, i, j-1)
+}
+
+//数据流的中位数:https://leetcode-cn.com/problems/find-median-from-data-stream/
+type PriorityQueue struct {
+	list      []int
+	isBigHeap bool
+}
+
+func (p *PriorityQueue) length() int {
+	return len(p.list)
+}
+func (p *PriorityQueue) addNum(num int) {
+	p.list = append(p.list, num)
+	var k, preK = len(p.list)/2 - 1, len(p.list) - 1
+	for ; k >= 0; k, preK = (k+1)/2-1, k {
+		if p.isBigHeap {
+			if p.list[k] < num {
+				p.list[preK] = p.list[k]
+				continue
+			}
+		} else {
+			if p.list[k] > num {
+				p.list[preK] = p.list[k]
+				continue
+
+			}
+		}
+		break
+	}
+	p.list[preK] = num
+}
+func (p *PriorityQueue) getHead() int {
+	if len(p.list) == 0 {
+		return -1
+	}
+	return p.list[0]
+}
+
+func (p *PriorityQueue) fetchHead() int {
+	if len(p.list) == 0 {
+		return -1
+	}
+	tmp := p.list[0]
+	p.list[0] = p.list[len(p.list)-1]
+	p.list = p.list[:len(p.list)-1]
+	p.adjustHead()
+	return tmp
+}
+
+func (p *PriorityQueue) adjustHead() {
+	length := len(p.list)
+	if length == 0 {
+		return
+	}
+
+	tmp := p.list[0]
+	var k, preK = 1, 0
+	for ; k < length; k, preK = 2*k+1, k {
+		if p.isBigHeap {
+			if k+1 < length && p.list[k] < p.list[k+1] {
+				k++
+			}
+			if p.list[k] > tmp {
+				p.list[preK] = p.list[k]
+				continue
+			}
+		} else {
+			if k+1 < length && p.list[k] > p.list[k+1] {
+				k++
+			}
+			if p.list[k] < tmp {
+				p.list[preK] = p.list[k]
+				continue
+			}
+		}
+		break
+	}
+	p.list[preK] = tmp
+}
+
+type MedianFinder struct {
+	smallQ, biggerQ PriorityQueue
+}
+
+/** initialize your data structure here. */
+func MedianFinderConstructor() MedianFinder {
+	return MedianFinder{
+		smallQ:  PriorityQueue{},
+		biggerQ: PriorityQueue{isBigHeap: true},
+	}
+}
+
+func (this *MedianFinder) AddNum(num int) {
+	if this.smallQ.length() < this.biggerQ.length() {
+		this.biggerQ.addNum(num)
+		this.smallQ.addNum(this.biggerQ.fetchHead())
+	} else {
+		this.smallQ.addNum(num)
+		this.biggerQ.addNum(this.smallQ.fetchHead())
+	}
+}
+
+func (this *MedianFinder) FindMedian() float64 {
+	if this.biggerQ.length() > this.smallQ.length() {
+		return float64(this.biggerQ.getHead())
+	} else {
+		return float64(this.biggerQ.getHead()+this.smallQ.getHead()) / 2
+	}
+}
+
+//设计推特:https://leetcode-cn.com/problems/design-twitter/
+type Twitter struct {
+	followMap  map[int]map[int]bool
+	twitterMap map[int][]Tweet
+	count      int64
+}
+
+type Tweet struct {
+	id        int
+	timeStamp int64
+}
+
+/** Initialize your data structure here. */
+func TwitterConstructor() Twitter {
+	return Twitter{
+		followMap:  make(map[int]map[int]bool),
+		twitterMap: make(map[int][]Tweet),
+	}
+}
+
+/** Compose a new tweet. */
+func (this *Twitter) PostTweet(userId int, tweetId int) {
+	tweets := this.twitterMap[userId]
+	tweets = append(tweets, Tweet{tweetId, this.count})
+	this.count++
+	this.twitterMap[userId] = tweets
+}
+
+/** Retrieve the 10 most recent tweet ids in the user's news feed. Each item in the news feed must be posted by users who the user followed or by the user herself. Tweets must be ordered from most recent to least recent. */
+func (this *Twitter) GetNewsFeed(userId int) []int {
+	var tweets []Tweet
+	tt := this.twitterMap[userId]
+	if len(tt) > 10 {
+		tt = tt[len(tt)-10:]
+	}
+	tweets = append(tweets, tt...)
+
+	for uid := range this.followMap[userId] {
+		tt := this.twitterMap[uid]
+		if len(tt) > 10 {
+			tt = tt[len(tt)-10:]
+		}
+		tweets = append(tweets, tt...)
+	}
+
+	sort.Slice(tweets, func(i, j int) bool {
+		return tweets[i].timeStamp > tweets[j].timeStamp
+	})
+
+	if len(tweets) > 10 {
+		tweets = tweets[:10]
+	}
+
+	var resId []int
+	for _, tt := range tweets {
+		resId = append(resId, tt.id)
+	}
+
+	return resId
+
+}
+
+/** Follower follows a followee. If the operation is invalid, it should be a no-op. */
+func (this *Twitter) Follow(followerId int, followeeId int) {
+	if followeeId == followerId {
+		return
+	}
+	follower := this.followMap[followerId]
+	if follower == nil {
+		this.followMap[followerId] = make(map[int]bool)
+		follower = this.followMap[followerId]
+	}
+	follower[followeeId] = true
+}
+
+/** Follower unfollows a followee. If the operation is invalid, it should be a no-op. */
+func (this *Twitter) Unfollow(followerId int, followeeId int) {
+	follower := this.followMap[followerId]
+	if follower == nil {
+		return
+	}
+
+	delete(follower, followeeId)
+}
+
+//下一个更大元素 I:https://leetcode-cn.com/problems/next-greater-element-i/
+func nextGreaterElement(nums1 []int, nums2 []int) []int {
+	var numToRes = make(map[int]int)
+	for _, n := range nums1 {
+		numToRes[n] = math.MinInt32
+	}
+
+	for _, val := range nums2 {
+		if _, ok := numToRes[val]; ok {
+			numToRes[val] = -1
+		}
+
+		for key, rr := range numToRes {
+			if rr == math.MinInt32 {
+				continue
+			}
+			if rr == -1 && val > key {
+				numToRes[key] = val
+			}
+		}
+
+	}
+
+	var res []int
+	for _, val := range nums1 {
+		res = append(res, numToRes[val])
+	}
+
+	return res
+}
+
+//下一个更大元素 II:https://leetcode-cn.com/problems/next-greater-element-ii/
+//使用单调栈
+func nextGreaterElements(nums []int) []int {
+	var res = make([]int, len(nums))
+	var stack []int
+	length := len(nums)
+	for k := 2*len(nums) - 1; k >= 0; k-- {
+		i := k % length
+		num := nums[i]
+		for len(stack) > 0 && num >= stack[len(stack)-1] {
+			stack = stack[:len(stack)-1]
+		}
+
+		if len(stack) == 0 {
+			res[i] = -1
+		} else {
+			res[i] = stack[len(stack)-1]
+		}
+
+		stack = append(stack, num)
+	}
+	return res
+}
+
+//滑动窗口最大值:https://leetcode-cn.com/problems/sliding-window-maximum/
+//使用单调队列
+
+type IncreasingQueue struct {
+	head   *Qnode
+	tail   *Qnode
+	k      int
+	length int
+}
+
+type Qnode struct {
+	val  int
+	next *Qnode
+	pre  *Qnode
+}
+
+func (q *IncreasingQueue) add(val int, first int) {
+	if q.length == q.k && q.get() == first {
+		q.poll()
+	}
+	m := q.head
+	for ; m != nil && m.val < val; m = m.next { //不能用<=
+	}
+	tmp := Qnode{
+		val:  val,
+		next: m,
+	}
+	if m != nil {
+		m.pre = &tmp
+	} else {
+		q.tail = &tmp
+	}
+
+	q.head = &tmp
+	if q.length < q.k {
+		q.length++
+	}
+}
+
+func (q *IncreasingQueue) get() int {
+	if q.tail != nil {
+		return q.tail.val
+	} else {
+		return -1
+	}
+}
+
+func (q *IncreasingQueue) poll() int {
+	if q.tail != nil {
+		tmp := q.tail
+		if q.tail.pre != nil {
+			q.tail.pre.next = nil
+		}
+		q.tail = q.tail.pre
+		if q.tail == nil {
+			q.head = nil
+		}
+		q.length--
+		return tmp.val
+	}
+	return -1
+}
+func maxSlidingWindow(nums []int, k int) []int {
+	quene := IncreasingQueue{k: k}
+	for _, val := range nums[:k-1] {
+		quene.add(val, val)
+	}
+	var res []int
+	for i, value := range nums[k-1:] {
+		if i-1 < 0 {
+			quene.add(value, 0)
+		} else {
+			quene.add(value, nums[i-1])
+		}
+		res = append(res, quene.get())
+	}
+	return res
+}
+
+//用栈实现队列:https://leetcode-cn.com/problems/implement-queue-using-stacks/
+type MyQueue struct {
+	fStack, sStack []int
+}
+
+/** Initialize your data structure here. */
+func MyQueueConstructor() MyQueue {
+	return MyQueue{}
+}
+
+/** Push element x to the back of queue. */
+func (this *MyQueue) Push(x int) {
+	this.fStack = append(this.fStack, x)
+}
+
+/** Removes the element from in front of queue and returns that element. */
+func (this *MyQueue) Pop() int {
+	if len(this.sStack) == 0 {
+		this.copyStack()
+	}
+	tmp := this.sStack[len(this.sStack)-1]
+	this.sStack = this.sStack[:len(this.sStack)-1]
+	return tmp
+}
+
+func (this *MyQueue) copyStack() {
+	for i := 0; i < len(this.fStack)/2; i++ {
+		this.fStack[i], this.fStack[len(this.fStack)-1-i] = this.fStack[len(this.fStack)-1-i], this.fStack[i]
+	}
+	this.fStack, this.sStack = this.sStack, this.fStack
+}
+
+/** Get the front element. */
+func (this *MyQueue) Peek() int {
+	if len(this.sStack) == 0 {
+		this.copyStack()
+	}
+	return this.sStack[len(this.sStack)-1]
+}
+
+/** Returns whether the queue is empty. */
+func (this *MyQueue) Empty() bool {
+	return len(this.sStack) == 0 && len(this.fStack) == 0
+}
+
+//爱吃香蕉的珂珂:https://leetcode-cn.com/problems/koko-eating-bananas/
+func minEatingSpeed(piles []int, H int) int {
+	max := MaxSliceValue(piles)
+
+	var i, j = 1, max
+	for ; i < j-1; {
+		mid := (i + j) / 2
+		res := calHours(piles, mid)
+		fmt.Println(i, j, mid, res)
+		if res > H {
+			i = mid + 1
+		} else if res <= H {
+			j = mid
+		}
+	}
+
+	if calHours(piles, i) <= H {
+		return i
+	} else {
+		return j
+	}
+}
+
+func calHours(piles []int, speed int) (H int) {
+	for _, p := range piles {
+		if p%speed == 0 {
+			H += p / speed
+		} else {
+			H += p/speed + 1
+		}
+	}
+	return
+}
+
+//环形链表:https://leetcode-cn.com/problems/linked-list-cycle/
+func hasCycle(head *ListNode) bool {
+	var slow, fast = head, head
+	var hasCycel bool
+	for fast != nil {
+		if fast.Next != nil {
+			fast = fast.Next.Next
+		} else {
+			break
+		}
+		slow = slow.Next
+		if fast == slow {
+			hasCycel = true
+			break
+		}
+	}
+	return hasCycel
+}
+
+//环形链表 II:https://leetcode-cn.com/problems/linked-list-cycle-ii/
+func detectCycle(head *ListNode) *ListNode {
+	n := meetNode(head)
+	if nil == n {
+		return nil
+	}
+
+	for h := head; h != n; h, n = h.Next, n.Next {
+	}
+	return n
+}
+
+func meetNode(head *ListNode) *ListNode {
+	var slow, fast = head, head
+	var hasCycel bool
+	for fast != nil {
+		if fast.Next != nil {
+			fast = fast.Next.Next
+		} else {
+			break
+		}
+		slow = slow.Next
+		if fast == slow {
+			hasCycel = true
+			break
+		}
+	}
+	if hasCycel {
+		return slow
+	} else {
+		return nil
+	}
+}
+
+//删除链表的倒数第N个节点：https://leetcode-cn.com/problems/remove-nth-node-from-end-of-list/
+func removeNthFromEnd(head *ListNode, n int) *ListNode {
+	var h, e = head, head
+	i := 0
+	for ; i < n; i++ {
+		e = e.Next
+	}
+	if e == nil {
+		return head.Next
+	}
+
+	for ; e.Next != nil; h, e = h.Next, e.Next {
+	}
+	h.Next = h.Next.Next
+	return head
+}
+
+//两数之和 II - 输入有序数组：https://leetcode-cn.com/problems/two-sum-ii-input-array-is-sorted/
+func calTwoSum(numbers []int, target int) (res []int) {
+	var m, n = 0, len(numbers) - 1
+	for m < n {
+		sum := numbers[m] + numbers[n]
+		if sum > target {
+			n--
+		} else if sum < target {
+			m++
+		} else {
+			break
+		}
+
+	}
+	res = append(res, m+1, n+1)
+	return
+}
+
+//字符串的排列：https://leetcode-cn.com/problems/permutation-in-string/
+func checkInclusion(s1 string, s2 string) bool {
+	if len(s1) > len(s2) {
+		return false
+	}
+	oriChToNum := make(map[uint8]int)
+	resChToNum := make(map[uint8]int)
+
+	for i := range s1 {
+		oriChToNum[s1[i]]++
+	}
+
+	for i := range s2 {
+		if i < len(s1)-1 {
+			resChToNum[s2[i]]++
+		} else {
+			resChToNum[s2[i]]++
+			if i != len(s1)-1 {
+				resChToNum[s2[i-len(s1)]]--
+				if resChToNum[s2[i-len(s1)]] == 0 {
+					delete(resChToNum, s2[i-len(s1)])
+				}
+			}
+
+			if _, ok := oriChToNum[s2[i]]; ok && isInclude(oriChToNum, resChToNum) {
+				return true
+			}
+
+		}
+	}
+
+	return false
+}
+
+func isInclude(ori, res map[uint8]int) bool {
+	for key, val := range ori {
+		if res[key] != val {
+			return false
+		}
+	}
+	return true
+}
+
+//无重复字符的最长子串：https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/
+func lengthOfLongestSubstring2(s string) int {
+	if len(s) <= 0 {
+		return 0
+	}
+	var max int
+	chToNum := make(map[uint8]int)
+
+	var i, j = 0, 0
+	for {
+		for ; j < len(s); j++ {
+			chToNum[s[j]]++
+			if chToNum[s[j]] > 1 {
+				if len(chToNum) > max {
+					max = len(chToNum)
+				}
+				j++
+				break
+			}
+		}
+
+		if j >= len(s) {
+			break
+		}
+
+		for ; i < j; i++ {
+			chToNum[s[i]]--
+			if chToNum[s[i]] == 0 {
+				delete(chToNum, s[i])
+			} else {
+				i++
+				break
+			}
+		}
+	}
+
+	if len(chToNum) > max {
+		max = len(chToNum)
+	}
+	return max
+}
+
+//常数时间插入、删除和获取随机元素：https://leetcode-cn.com/problems/insert-delete-getrandom-o1/
+type RandomizedSet struct {
+	valMap   map[int]*setNode
+	nodeList []*setNode
+}
+
+type setNode struct {
+	val   int
+	index int
+}
+
+/** Initialize your data structure here. */
+func RandomizedSetConstructor() RandomizedSet {
+	return RandomizedSet{
+		valMap: make(map[int]*setNode),
+	}
+}
+
+/** Inserts a value to the set. Returns true if the set did not already contain the specified element. */
+func (this *RandomizedSet) Insert(val int) bool {
+	if _, ok := this.valMap[val]; ok {
+		return false
+	}
+	n := setNode{
+		val:   val,
+		index: len(this.nodeList),
+	}
+	this.valMap[val] = &n
+	this.nodeList = append(this.nodeList, &n)
+	return true
+}
+
+/** Removes a value from the set. Returns true if the set contained the specified element. */
+func (this *RandomizedSet) Remove(val int) bool {
+	if _, ok := this.valMap[val]; !ok {
+		return false
+	}
+	index := this.valMap[val].index
+	delete(this.valMap, val)
+	this.nodeList[index] = this.nodeList[len(this.nodeList)-1]
+	this.nodeList[index].index = index
+	this.nodeList = this.nodeList[:len(this.nodeList)-1]
+	return true
+}
+
+/** Get a random element from the set. */
+func (this *RandomizedSet) GetRandom() int {
+	rand.Seed(time.Now().UnixNano())
+	return this.nodeList[rand.Intn(len(this.nodeList))].val
+}
+
+//黑名单中的随机数:https://leetcode-cn.com/problems/random-pick-with-blacklist/
+type Solution struct {
+	N          int
+	blacklist  []int
+	blackToVal map[int]int
+}
+
+func SolutionConstructor(N int, blacklist []int) Solution {
+	blackToVal := make(map[int]int)
+	for _, black := range blacklist {
+		blackToVal[black] = black
+	}
+	var j, sz = N - 1, N - len(blacklist)
+
+	for _, black := range blacklist {
+		if black >= sz {
+			continue
+		}
+
+		for {
+			if _, ok := blackToVal[j]; !ok {
+				break
+			}
+			j--
+		}
+		blackToVal[black] = j
+		j--
+	}
+
+	return Solution{
+		N:          N,
+		blacklist:  blacklist,
+		blackToVal: blackToVal,
+	}
+}
+
+func (this *Solution) Pick() int {
+	rand.Seed(time.Now().UnixNano())
+	val := rand.Intn(this.N - len(this.blacklist))
+	if _, ok := this.blackToVal[val]; ok {
+		return this.blackToVal[val]
+	} else {
+		return val
+	}
+}
+
+//删除排序数组中的重复项：https://leetcode-cn.com/problems/remove-duplicates-from-sorted-array/
+func removeDuplicates(nums []int) int {
+	sort.Ints(nums)
+	var count int
+	for i := 0; i < len(nums); i++ {
+		if i+1 < len(nums) && nums[i] == nums[i+1] {
+			count++
+			nums[i] = math.MinInt32
+		}
+	}
+
+	flag := true
+	for i, j := 0, len(nums)-1; i <= j; {
+		if flag {
+			if nums[j] != math.MinInt32 {
+				flag = false
+			}
+			j--
+		} else {
+			if nums[i] == math.MinInt32 {
+				nums[i], nums[j+1] = nums[j+1], nums[i]
+				flag = true
+			}
+			i++
+		}
+	}
+	sort.Ints(nums[:len(nums)-count])
+	return len(nums) - count
+}
+
+func removeElement(nums []int, val int) int {
+	var count int
+	for i, j := 0, 0; j < len(nums); {
+		if nums[j] != val {
+			nums[i] = nums[j]
+			i++
+			count++
+		}
+		j++
+	}
+	return count
+}
+
+//编辑距离：https://leetcode-cn.com/problems/edit-distance/
+func minDistance(word1 string, word2 string) int {
+	memo := make([][]int, len(word1))
+	for i := range memo {
+		memo[i] = make([]int, len(word2))
+		for j := range memo[i] {
+			memo[i][j] = -1
+		}
+	}
+	return minDistanceDp(word1, word2, memo, len(word1)-1, len(word2)-1)
+}
+
+func minDistanceDp(word1, world2 string, memo [][]int, i, j int) int {
+	if i == -1 {
+		return j + 1
+	} else if j == -1 {
+		return i + 1
+	}
+	if memo[i][j] > -1 {
+		return memo[i][j]
+	}
+
+	if word1[i] == world2[j] {
+		return minDistanceDp(word1, world2, memo, i-1, j-1)
+	} else {
+		v1 := minDistanceDp(word1, world2, memo, i, j-1) + 1
+		v2 := minDistanceDp(word1, world2, memo, i-1, j) + 1
+		v3 := minDistanceDp(word1, world2, memo, i-1, j-1) + 1
+		vv := Min(v1, v2)
+		vv = Min(vv, v3)
+		memo[i][j] = vv
+		return vv
+	}
+}
+
+//目标和：https://leetcode-cn.com/problems/target-sum/?utm_source=LCUS&utm_medium=ip_redirect&utm_campaign=transfer2china
+func findTargetSumWays(nums []int, S int) (res int) {
+	if len(nums) == 0 {
+		if S == 0 {
+			return 1
+		} else {
+			return 0
+		}
+	}
+
+	length := len(nums)
+	res = findTargetSumWays(nums[:length-1], S+nums[length-1])
+	res += findTargetSumWays(nums[:length-1], S-nums[length-1])
+	return res
+}
+
+//俄罗斯套娃信封问题:https://leetcode-cn.com/problems/russian-doll-envelopes/
+//超时了
+func maxEnvelopes(envelopes [][]int) int {
+	if len(envelopes) == 0 {
+		return 0
+	}
+
+	sort.Slice(envelopes, func(i, j int) bool {
+		if envelopes[i][0] != envelopes[j][0] {
+			return envelopes[i][0] < envelopes[j][0]
+		} else {
+			return envelopes[i][1] > envelopes[j][1]
+		}
+	})
+	var list []int
+	for _, n := range envelopes {
+		list = append(list, n[1])
+	}
+
+	return lengthOfLIS(list)
+}
+
+//最长上升子序列:https://leetcode-cn.com/problems/longest-increasing-subsequence/
+func lengthOfLIS(nums []int) int {
+	dp := make([]int, len(nums))
+	dp[0] = 1
+	for i, n := range nums[1:] {
+		m := i + 1
+		var max = 1
+		for j, k := range nums[:m] {
+			if n > k {
+				max = Max(max, dp[j]+1)
+			}
+		}
+		dp[m] = max
+	}
+
+	return MaxSliceValue(dp)
+}
+
+//最大子序和:https://leetcode-cn.com/problems/maximum-subarray/
+	func maxSubArray(nums []int) int {
+		var dp = make([]int, len(nums))
+		dp[0] = nums[0]
+		for i, v := range nums[1:] {
+			k := i + 1
+			if dp[k-1]+v > v {
+				dp[k] = dp[k-1] + v
+			} else {
+				dp[k] = v
+			}
+		}
+		return MaxSliceValue(dp)
+	}
+
+
+
+	//最长公共子序列:https://leetcode-cn.com/problems/longest-common-subsequence/
+func longestCommonSubsequence(text1 string, text2 string) int {
+	dp := make([][]int, len(text1)+1)
+	for i := range dp {
+		dp[i] = make([]int, len(text2)+1)
+	}
+
+	for i := 0; i < len(text1); i++ {
+		for j := 0; j < len(text2); j++ {
+			if text1[i] == text2[j] {
+				dp[i+1][j+1] = dp[i][j] + 1
+			} else {
+				dp[i+1][j+1] = Max(dp[i][j+1], dp[i+1][j])
+			}
+		}
+	}
+
+	return dp[len(text1)][len(text2)]
+}
+
+//两个字符串的删除操作:https://leetcode-cn.com/problems/delete-operation-for-two-strings/
+func minStringDistance(word1 string, word2 string) int {
+	dp := make([][]int, len(word1)+1)
+	for i := range dp {
+		dp[i] = make([]int, len(word2)+1)
+		dp[i][0] = i
+	}
+	for i := range dp[0] {
+		dp[0][i] = i
+	}
+
+	for i := 1; i <= len(word1); i++ {
+		for j := 1; j <= len(word2); j++ {
+			if word1[i-1] == word2[j-1] {
+				dp[i][j] = dp[i-1][j-1]
+			} else {
+				dp[i][j] = Min(dp[i-1][j]+1, dp[i][j-1]+1)
+			}
+		}
+	}
+
+	return dp[len(word1)][len(word2)]
+}
+
+//两个字符串的最小ASCII删除和：https://leetcode-cn.com/problems/minimum-ascii-delete-sum-for-two-strings/
+func minimumDeleteSum(word1 string, word2 string) int {
+	dp := make([][]int, len(word1)+1)
+	for i := range dp {
+		dp[i] = make([]int, len(word2)+1)
+		dp[i][0] = SumAscii(word1[:i])
+	}
+	for i := range dp[0] {
+		dp[0][i] = SumAscii(word2[:i])
+	}
+
+	for i := 1; i <= len(word1); i++ {
+		for j := 1; j <= len(word2); j++ {
+			if word1[i-1] == word2[j-1] {
+				dp[i][j] = dp[i-1][j-1]
+			} else {
+				dp[i][j] = Min(dp[i-1][j]+int(word1[i-1]), dp[i][j-1]+int(word2[j-1]))
+			}
+		}
+	}
+
+	return dp[len(word1)][len(word2)]
+}
+
+func SumAscii(word1 string) int {
+	sum := 0
+	for _, val := range word1 {
+		sum += int(val)
+	}
+	return sum
+}
+
+//无重叠区间:https://leetcode-cn.com/problems/non-overlapping-intervals/
+func eraseOverlapIntervals(intervals [][]int) int {
+	sort.Slice(intervals, func(i, j int) bool {
+		if intervals[i][0] != intervals[j][0] {
+			return intervals[i][0] < intervals[j][0]
+		} else {
+			return intervals[i][1] < intervals[j][1]
+		}
+	})
+
+	dp := make([]int, len(intervals)+1)
+	dp[0] = 0
+
+	for i := 1; i <= len(intervals); i++ {
+		max := 1
+		for j := 1; j < i; j++ {
+			if intervals[i-1][0] >= intervals[j-1][1] {
+				max = Max(dp[j]+1, max)
+			}
+		}
+		dp[i] = max
+	}
+
+	return len(intervals) - MaxSliceValue(dp)
+}
+
+func eraseOverlapIntervals2(intervals [][]int) int {
+	if len(intervals) == 0 {
+		return 0
+	}
+	sort.Slice(intervals, func(i, j int) bool {
+		return intervals[i][1] < intervals[j][1]
+	})
+	first := intervals[0]
+	count := 0
+
+	for i := 1; i < len(intervals); i++ {
+		if intervals[i][0] >= first[1] {
+			first = intervals[i]
+		} else {
+			count++
+		}
+	}
+
+	return count
+}
+
+//用最少数量的箭引爆气球:https://leetcode-cn.com/problems/minimum-number-of-arrows-to-burst-balloons/
+func findMinArrowShots(points [][]int) int {
+	if len(points) == 0 {
+		return 0
+	}
+	sort.Slice(points, func(i, j int) bool {
+		return points[i][1] < points[j][1]
+	})
+
+	var count int = 1
+	first := points[0]
+
+	for i := 1; i < len(points); i++ {
+		if points[i][0] <= first[1] {
+			continue
+		} else {
+			first = points[i]
+			count++
+		}
+	}
+
+	return count
+}
+
+//跳跃游戏：https://leetcode-cn.com/problems/jump-game/
+func canJump(nums []int) bool {
+	memo := make([]int, len(nums))
+	for i := 0; i < len(nums); i++ {
+		memo[i] = -1
+	}
+
+	return checkCanJump(nums, 0, memo)
+}
+
+func checkCanJump(nums []int, start int, memo []int) bool {
+	if start == len(nums)-1 {
+		return true
+	} else if start >= len(nums)-1 {
+		return false
+	}
+	if memo[start] == 0 {
+		return false
+	}
+
+	for i := 1; i <= nums[start]; i++ {
+		if checkCanJump(nums, start+i, memo) {
+			return true
+		}
+	}
+	memo[start] = 0
+	return false
+}
+
+//跳跃游戏 II：https://leetcode-cn.com/problems/jump-game-ii/
+func jump(nums []int) int {
+	dp := make([]int, len(nums))
+
+	dp[0] = 0
+
+	for i := 1; i < len(nums); i++ {
+
+		var min = math.MaxInt32
+		for j := 0; j < i; j++ {
+			if j+nums[j] >= i {
+				min = Min(min, dp[j]+1)
+			}
+			dp[i] = min
+		}
+	}
+
+	return dp[len(nums)-1]
+}
+
+//预测赢家:https://leetcode-cn.com/problems/predict-the-winner/
+func PredictTheWinner(nums []int) bool {
+	dp := make([][][2]int, len(nums))
+
+	for i := 0; i < len(nums); i++ {
+		dp[i] = make([][2]int, len(nums))
+		dp[i][i] = [2]int{nums[i], 0}
+	}
+
+	for i := 1; i < len(nums); i++ {
+		for k, j := 0, i; k < len(nums) && j < len(nums); k, j = k+1, j+1 {
+			left := nums[k] + dp[k+1][j][1]
+			right := nums[j] + dp[k][j-1][1]
+			if left > right {
+				dp[k][j][0] = left
+				dp[k][j][1] = dp[k+1][j][0]
+			} else {
+				dp[k][j][0] = right
+				dp[k][j][1] = dp[k][j-1][0]
+			}
+
+		}
+	}
+	fmt.Println(dp)
+	res := dp[0][len(nums)-1]
+	return res[0] >= res[1]
+}
+
+//让字符串成为回文串的最少插入次数:https://leetcode-cn.com/problems/minimum-insertion-steps-to-make-a-string-palindrome/
+func minInsertions(s string) int {
+	dp := make([][]int, len(s))
+
+	for i := 0; i < len(s); i++ {
+		dp[i] = make([]int, len(s))
+		for j := 0; j < len(s); j++ {
+			dp[i][j] = -1
+		}
+		dp[i][i] = 0
+	}
+
+	return minInsertionsDp(s, 0, len(s)-1, dp)
+}
+
+func minInsertionsDp(s string, i, j int, dp [][]int) int {
+	if i >= j {
+		return 0
+	}
+	if dp[i][j] >= 0 {
+		return dp[i][j]
+	}
+
+	var min int
+	if s[i] == s[j] {
+		min = minInsertionsDp(s, i+1, j-1, dp)
+	} else {
+		min = Min(minInsertionsDp(s, i, j-1, dp)+1, minInsertionsDp(s, i+1, j, dp)+1)
+	}
+	dp[i][j] = min
+
+	return min
+}
+
+//子集:https://leetcode-cn.com/problems/subsets/
+func subsets(nums []int) [][]int {
+	memo := make(map[int][][]int)
+
+	res := [][]int{{}}
+	for i := 0; i < len(nums); i++ {
+		res = append(res, subsetsDp(nums[i:], i, memo)...)
+	}
+
+	return res
+}
+
+func subsetsDp(nums []int, index int, memo map[int][][]int) [][]int {
+	if val, ok := memo[index]; ok {
+		return val
+	}
+	var res [][]int
+	first := nums[0]
+	res = append(res, []int{first})
+
+	for j := 1; j < len(nums); j++ {
+		rr := subsetsDp(nums[j:], index+j, memo)
+		for i := range rr {
+			rrr := append([]int{first}, rr[i]...)
+			res = append(res, rrr)
+		}
+	}
+
+	memo[index] = res
+	return res
+}
+
+//组合：https://leetcode-cn.com/problems/combinations/
+func combine(n int, k int) [][]int {
+	var res [][]int
+
+	findCombine(1, n, k, []int{}, &res)
+	return res
+}
+
+func findCombine(e, n, k int, trace []int, res *[][]int) {
+	if len(trace) == k {
+		rr := append([]int{}, trace...)
+		*res = append(*res, rr)
+	}
+	if e > n {
+		return
+	}
+
+	for i := e; i <= n; i++ {
+		trace = append(trace, i)
+		findCombine(i+1, n, k, trace, res)
+		trace = trace[:len(trace)-1]
+	}
+
+	return
+}
+
+//解数独：https://leetcode-cn.com/problems/sudoku-solver/
+func solveSudoku(board [][]byte) {
+	solveSudokuDp(board, 0, 0)
+}
+
+func solveSudokuDp(board [][]byte, i, j int) bool {
+	for {
+		if j == len(board[0]) {
+			j = 0
+			i++
+		}
+		if i >= len(board) {
+			return true
+		}
+		if board[i][j] == '.' {
+			break
+		}
+		j++
+	}
+
+	for _, avail := range availNum(board, i, j) {
+		board[i][j] = avail
+		if solveSudokuDp(board, i, j+1) {
+			return true
+		}
+		board[i][j] = '.'
+	}
+
+	return false
+}
+
+func availNum(board [][]byte, i, j int) []byte {
+	rr1 := notIn1_9(board[i])
+
+	var rr2 []byte
+	for k := 0; k < len(board); k++ {
+		rr2 = append(rr2, board[k][j])
+	}
+
+	rr2 = notIn1_9(rr2)
+
+	var rr3 [] byte
+
+	m, n := i/3*3, j/3*3
+	rr3 = append(rr3, board[m][n:n+3]...)
+	rr3 = append(rr3, board[m+1][n:n+3]...)
+	rr3 = append(rr3, board[m+2][n:n+3]...)
+
+	rr3 = notIn1_9(rr3)
+
+	return intersection(rr3, intersection(rr1, rr2))
+
+}
+
+func intersection(a, b []byte) []byte {
+	var m = make(map[byte]bool)
+	for _, n := range a {
+		m[n] = true
+	}
+	var res []byte
+	for _, n := range b {
+		if _, ok := m[n]; ok {
+			res = append(res, n)
+		}
+	}
+
+	return res
+}
+
+func notIn1_9(nums []byte) []byte {
+
+	var s = []byte{'1', '2', '3', '4', '5', '6', '7', '8', '9'}
+
+	var m = make(map[byte]bool)
+	for _, n := range nums {
+		m[n] = true
+	}
+
+	var res []byte
+	for _, ss := range s {
+		if _, ok := m[ss]; !ok {
+			res = append(res, ss)
+		}
+	}
+
+	return res
+}
+
+//括号生成：https://leetcode-cn.com/problems/generate-parentheses/
+func generateParenthesis(n int) []string {
+	var res []string
+	generateParenthesisDp(n, n, nil, &res)
+	return res
+}
+
+func generateParenthesisDp(i, j int, rr []byte, res *[]string) {
+	if i == 0 && j == 0 {
+		*res = append(*res, string(rr))
+		return
+	}
+
+	if i == j {
+		rr = append(rr, '(')
+		generateParenthesisDp(i-1, j, rr, res)
+	} else if i > 0 {
+		rr = append(rr, '(')
+		generateParenthesisDp(i-1, j, rr, res)
+
+		rr[len(rr)-1] = ')'
+		generateParenthesisDp(i, j-1, rr, res)
+	} else {
+		rr = append(rr, ')')
+		generateParenthesisDp(i, j-1, rr, res)
+	}
+}
+
+//航班预订统计：https://leetcode-cn.com/problems/corporate-flight-bookings/
+func corpFlightBookings(bookings [][]int, n int) []int {
+	res := make([]int, n)
+
+	for _, bb := range bookings {
+		for i, j := bb[0], bb[1]; i <= j; i++ {
+			if i <= n {
+				res[i-1] += bb[2]
+			}
+		}
+	}
+
+	return res
+}
+
+//和为K的子数组:https://leetcode-cn.com/problems/subarray-sum-equals-k/
+func subarraySum(nums []int, k int) int {
+	var res int
+	var sum = make([]int, len(nums))
+	sum[0] = nums[0]
+	for i := 1; i < len(sum); i++ {
+		sum[i] = nums[i] + sum[i-1]
+	}
+
+	for j := len(nums) - 1; j >= 0; j-- {
+		if sum[j] == k {
+			res++
+		}
+
+		for i := 0; i < j; i++ {
+			if sum[j]-sum[i] == k {
+				res++
+			}
+		}
+	}
+
+	return res
+}
+
+func quickSort(nums []int) {
+	if len(nums) <= 0 {
+		return
+	}
+	tmp := nums[0]
+	var backward = true
+	i, j := 0, len(nums)-1
+	for i < j {
+		if backward {
+			if nums[j] < tmp {
+				nums[i] = nums[j]
+				backward = false
+				continue
+			}
+			j--
+		} else {
+			if nums[i] > tmp {
+				nums[j] = nums[i]
+				backward = true
+				continue
+			}
+			i++
+		}
+	}
+
+	nums[i] = tmp
+
+	quickSort(nums[:i])
+	quickSort(nums[i+1:])
+}
+
+//数组中的第K个最大元素：https://leetcode-cn.com/problems/kth-largest-element-in-an-array/
+func findKthLargest(nums []int, k int) int {
+	var kNums []int
+	for _, n := range nums[:k] {
+		kNums = append(kNums, n)
+		shiftUp(kNums)
+	}
+
+	for _, n := range nums[k:] {
+		if kNums[0] < n {
+			kNums[0] = n
+			shiftDown(kNums)
+		}
+	}
+
+	return kNums[0]
+}
+
+func shiftUp(num []int) {
+	tmp := num[len(num)-1]
+	i := len(num) - 1
+	for ; i > 0; {
+		var next int
+		if i%2 == 0 {
+			next = i/2 - 1
+		} else {
+			next = i / 2
+		}
+
+		if num[next] > tmp {
+			num[i] = num[next]
+		} else {
+			break
+		}
+		i = next
+	}
+
+	num[i] = tmp
+}
+
+func shiftDown(num []int) {
+	tmp := num[0]
+	i := 0
+	for ; 2*i+1 < len(num); {
+		j := 2*i + 1
+		if j+1 < len(num) && num[j+1] < num[j] {
+			j++
+		}
+
+		if num[j] < tmp {
+			num[i] = num[j]
+		} else {
+			break
+		}
+		i = j
+	}
+
+	num[i] = tmp
+}
+//type Node struct {
+//	Val    int
+//	Next   *Node
+//	Random *Node
+//}
+//
+////复杂链表的复制:https://leetcode-cn.com/problems/fu-za-lian-biao-de-fu-zhi-lcof/
+//func copyRandomList(head *Node) *Node {
+//	pToOrder := make(map[*Node]int)
+//	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
+//		pToOrder[h] = i
+//	}
+//
+//	randonToOrder := make(map[int]int)
+//	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
+//		if h.Random != nil {
+//			randonToOrder[i] = pToOrder[h.Random]
+//		}
+//	}
+//
+//	var hhead, tail *Node
+//	orderToP := make(map[int]*Node)
+//	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
+//		tmp := *h
+//		if i == 0 {
+//			tail = &tmp
+//			hhead = tail
+//		} else {
+//			tail.Next = &tmp
+//			tail = &tmp
+//		}
+//		orderToP[i] = &tmp
+//	}
+//
+//	for i, h := 0, hhead; h != nil; i, h = i+1, h.Next {
+//		if val, ok := randonToOrder[i]; ok {
+//			h.Random = orderToP[val]
+//		}
+//	}
+//
+//	return hhead
+//
+//}
+//
+////深度优先遍历
+//func copyRandomList2(head *Node) *Node {
+//	visit := make(map[*Node]*Node)
+//	return copyRandomList2DFS(head, visit)
+//}
+//
+//func copyRandomList2DFS(head *Node, visit map[*Node]*Node) (n *Node) {
+//	if head == nil {
+//		return nil
+//	}
+//
+//	if visit[head] != nil {
+//		return visit[head]
+//	}
+//	n = &Node{
+//		Val: head.Val,
+//	}
+//	visit[head] = n
+//	n.Next = copyRandomList2DFS(head.Next, visit)
+//	n.Random = copyRandomList2DFS(head.Random, visit)
+//
+//	return n
+//}
 
 //二叉搜索树与双向链表:https://leetcode-cn.com/problems/er-cha-sou-suo-shu-yu-shuang-xiang-lian-biao-lcof/
 //无法在leetcode验证

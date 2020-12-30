@@ -1,5 +1,11 @@
 package main
 
+import (
+	"fmt"
+	"math"
+	"sort"
+)
+
 func MakeRange(beg int, end int, step int) []int {
 	res := make([]int, (end-beg)/step+1)
 
@@ -43,8 +49,19 @@ func Abs(i int) int {
 }
 
 func MaxSliceValue(s []int) int {
-	var max int
+	var max = math.MinInt32
 	for _, n := range s {
+		if n > max {
+			max = n
+		}
+	}
+	return max
+}
+
+func MaxMultiValue(v1, v2 int, v3 ...int) int {
+	v3 = append(v3, v1, v2)
+	var max = math.MinInt32
+	for _, n := range v3 {
 		if n > max {
 			max = n
 		}
@@ -72,3 +89,13 @@ func IntSliceEqual(a, b []int) bool {
 
 	return true
 }
+
+func FindIntSliceIndex(list []int, val int) int {
+	for i, l := range list {
+		if val == l {
+			return i
+		}
+	}
+	return -1
+}
+
