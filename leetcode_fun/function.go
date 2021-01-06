@@ -2524,23 +2524,21 @@ func lengthOfLIS(nums []int) int {
 }
 
 //最大子序和:https://leetcode-cn.com/problems/maximum-subarray/
-	func maxSubArray(nums []int) int {
-		var dp = make([]int, len(nums))
-		dp[0] = nums[0]
-		for i, v := range nums[1:] {
-			k := i + 1
-			if dp[k-1]+v > v {
-				dp[k] = dp[k-1] + v
-			} else {
-				dp[k] = v
-			}
+func maxSubArray(nums []int) int {
+	var dp = make([]int, len(nums))
+	dp[0] = nums[0]
+	for i, v := range nums[1:] {
+		k := i + 1
+		if dp[k-1]+v > v {
+			dp[k] = dp[k-1] + v
+		} else {
+			dp[k] = v
 		}
-		return MaxSliceValue(dp)
 	}
+	return MaxSliceValue(dp)
+}
 
-
-
-	//最长公共子序列:https://leetcode-cn.com/problems/longest-common-subsequence/
+//最长公共子序列:https://leetcode-cn.com/problems/longest-common-subsequence/
 func longestCommonSubsequence(text1 string, text2 string) int {
 	dp := make([][]int, len(text1)+1)
 	for i := range dp {
@@ -3100,4 +3098,1148 @@ func shiftDown(num []int) {
 	}
 
 	num[i] = tmp
+}
+
+//使用快排
+func findKthLargest2(nums []int, k int) int {
+	var i, j = 0, len(nums)
+	k = len(nums) - k
+	for i < j {
+		m := partition(nums[i:j])
+		m = i + m
+
+		if m > k {
+			j = m
+		} else if m < k {
+			i = m + 1
+		} else {
+			return nums[m]
+		}
+	}
+
+	return 0
+}
+
+func partition(nums []int) int {
+	tmp := nums[0]
+	var i, j = 0, len(nums) - 1
+	var backward = true
+
+	for i < j {
+		if backward {
+			if nums[j] < tmp {
+				nums[i] = nums[j]
+				backward = false
+				continue
+			}
+			j--
+		} else {
+			if nums[i] > tmp {
+				nums[j] = nums[i]
+				backward = true
+				continue
+			}
+			i++
+		}
+	}
+
+	nums[i] = tmp
+	return i
+}
+
+//堆排序
+func heapSort(nums []int) {
+
+	////建堆方式1
+	//e := len(nums)/2 - 1
+	//for i := e; i >= 0; i-- {
+	//	heapSortShiftDown(nums, i)
+	//}
+
+	//建堆方式2
+	for i := 1; i < len(nums); i++ {
+		heapSortShiftUp(nums[:i+1], i)
+	}
+
+	for i := len(nums) - 1; i > 0; i-- {
+		nums[0], nums[i] = nums[i], nums[0]
+		heapSortShiftDown(nums[:i], 0)
+	}
+
+	for i := 0; i < len(nums)/2; i++ {
+		nums[i], nums[len(nums)-1-i] = nums[len(nums)-1-i], nums[i]
+	}
+}
+
+func heapSortShiftDown(nums []int, index int) {
+	tmp := nums[index]
+	var i, j int
+	for i, j = index, 2*index+1; j < len(nums); i, j = j, 2*j+1 {
+		if j+1 < len(nums) && nums[j+1] < nums[j] {
+			j++
+		}
+
+		if nums[j] < tmp {
+			nums[i] = nums[j]
+		} else {
+			break
+		}
+	}
+
+	nums[i] = tmp
+}
+
+func heapSortShiftUp(nums []int, index int) {
+	tmp := nums[index]
+
+	var i, j int
+	for i, j = index, index/2; i > 0; i, j = j, j/2 {
+		if i%2 == 0 {
+			j--
+		}
+
+		if nums[j] > tmp {
+			nums[i] = nums[j]
+		} else {
+			break
+		}
+	}
+
+	nums[i] = tmp
+}
+
+//为运算表达式设计优先级:https://leetcode-cn.com/problems/different-ways-to-add-parentheses/
+func diffWaysToCompute(input string) []int {
+	if isNum(input) {
+		iin, _ := strconv.Atoi(input)
+		return []int{iin}
+	}
+
+	var res []int
+	for i := 0; i < len(input); i++ {
+		if input[i] == '-' || input[i] == '+' || input[i] == '*' {
+			a := diffWaysToCompute(input[:i])
+			b := diffWaysToCompute(input[i+1:])
+
+			for _, v1 := range a {
+				for _, v2 := range b {
+					res = append(res, calResult(v1, v2, input[i]))
+				}
+			}
+		}
+	}
+
+	return res
+}
+
+func calResult(a, b int, symbol uint8) int {
+	if symbol == '-' {
+		return a - b
+	} else if symbol == '+' {
+		return a + b
+	} else {
+		return a * b
+	}
+}
+
+func isNum(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] < '0' || s[i] > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+//阶乘后的零：https://leetcode-cn.com/problems/factorial-trailing-zeroes/
+func trailingZeroes(n int) int {
+	var count int
+
+	for i := n / 5; i > 0; i = i / 5 {
+		count += i
+	}
+
+	return count
+}
+
+//计数质数：https://leetcode-cn.com/problems/count-primes/
+//超时
+func countPrimes(n int) int {
+	if n <= 2 {
+		return 0
+	} else if n <= 3 {
+		return 1
+	}
+	var res []int
+	res = append(res, 2)
+
+outer:
+	for i := 3; i < n; i++ {
+		if i%2 == 1 {
+			for _, v := range res {
+				if i%v == 0 {
+					continue outer
+				}
+			}
+			res = append(res, i)
+		}
+	}
+
+	return len(res)
+}
+
+//优化算法
+func countPrimes2(n int) int {
+	notPrime := make([]bool, n)
+
+	for i := 2; i*i < n; i++ {
+		if !notPrime[i] {
+			for j := 2 * i; j < n; j += i {
+				notPrime[j] = true
+			}
+		}
+	}
+
+	var count int
+	for i := 2; i < n; i++ {
+		if !notPrime[i] {
+			count++
+		}
+	}
+	return count
+}
+
+//基本计算器 II：https://leetcode-cn.com/problems/basic-calculator-ii/
+func calculate(s string) int {
+	var sign = byte('+')
+	var stack []int
+	var st int
+	var beg int
+	for i := 0; i <= len(s); i++ {
+		ff := func() {
+			val := stringToInt(s[beg : beg+st])
+
+			switch sign {
+			case '+':
+				stack = append(stack, val)
+			case '-':
+				stack = append(stack, -val)
+			case '*':
+				stack[len(stack)-1] *= val
+			case '/':
+				stack[len(stack)-1] /= val
+			}
+		}
+
+		if i == len(s) {
+			ff()
+			break
+		}
+		switch s[i] {
+		case ' ':
+			continue
+		case '+', '-', '*', '/':
+			ff()
+			sign = s[i]
+			st = 0
+		default:
+			if st == 0 {
+				beg = i
+			}
+			st++
+		}
+	}
+
+	var rr int
+	for _, val := range stack {
+		rr += val
+	}
+
+	return rr
+}
+
+func stringToInt(ss string) int {
+	var res int
+	for i := 0; i < len(ss); i++ {
+		res = res*10 + int(ss[i]-'0')
+	}
+	return res
+}
+
+//最长回文子串：https://leetcode-cn.com/problems/longest-palindromic-substring/
+func longestPalindrome(s string) string {
+	var res string
+	for i := 0; i < len(s); i++ {
+		r := searchPalindrome(s, i, false)
+		r1 := searchPalindrome(s, i, true)
+		if len(r) < len(r1) {
+			r = r1
+		}
+		if len(r) > len(res) {
+			res = r
+		}
+	}
+
+	return res
+}
+
+func searchPalindrome(s string, i int, both bool) string {
+	var b, e = i, i
+	if both {
+		if i+1 >= len(s) || s[i] != s[i+1] {
+			return ""
+		}
+		e = i + 1
+	}
+
+	for ; b >= 0 && e < len(s) && s[b] == s[e]; b, e = b-1, e+1 {
+	}
+
+	return s[b+1 : e]
+
+}
+
+//有效的括号：https://leetcode-cn.com/problems/valid-parentheses/
+func isValid(s string) bool {
+	var stack []byte
+	var mm = map[byte]byte{
+		'(': ')',
+		'{': '}',
+		'[': ']',
+	}
+
+	for i := 0; i < len(s); i++ {
+		switch s[i] {
+		case '(', '{', '[':
+			stack = append(stack, s[i])
+		case ')', '}', ']':
+			if len(stack) == 0 {
+				return false
+			}
+			if mm[stack[len(stack)-1]] != s[i] {
+				return false
+			}
+			stack = stack[:len(stack)-1]
+		}
+
+	}
+	if len(stack) != 0 {
+		return false
+	}
+
+	return true
+}
+
+//判断子序列:https://leetcode-cn.com/problems/is-subsequence/
+func isSubsequence(s string, t string) bool {
+	if len(s) == 0 {
+		return true
+	}
+
+	p := 0
+
+	for i := 0; i < len(t); i++ {
+		if t[i] == s[p] {
+			p++
+			if p >= len(s) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+//连续子数组的最大和:https://leetcode-cn.com/problems/lian-xu-zi-shu-zu-de-zui-da-he-lcof/
+func maxSubArray2(nums []int) int {
+
+	res := make([]int, len(nums))
+	res[0] = nums[0]
+	var max = nums[0]
+	for i := 1; i < len(nums); i++ {
+		if res[i-1]+nums[i] > nums[i] {
+			res[i] = res[i-1] + nums[i]
+		} else {
+			res[i] = nums[i]
+		}
+
+		if res[i] > max {
+			max = res[i]
+		}
+	}
+
+	return max
+}
+
+//二叉搜索树的第k大节点:https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-di-kda-jie-dian-lcof/
+func kthLargest(root *TreeNode, k int) int {
+	return kthLargestTraverse(root, &k)
+}
+
+func kthLargestTraverse(root *TreeNode, k *int) int {
+	if root == nil {
+		return -1
+	}
+
+	if r := kthLargestTraverse(root.Right, k); r != -1 {
+		return r
+	}
+
+	*k--
+	if *k == 0 {
+		return root.Val
+	}
+
+	if r := kthLargestTraverse(root.Left, k); r != -1 {
+		return r
+	}
+
+	return -1
+}
+
+////队列的最大值：https://leetcode-cn.com/problems/dui-lie-de-zui-da-zhi-lcof/
+//type MaxQueue struct {
+//	max        int
+//	length     int
+//	head, tail *queueNode
+//}
+//
+//type queueNode struct {
+//	val  int
+//	next *queueNode
+//}
+//
+//func MaxQueueConstructor() MaxQueue {
+//
+//}
+//
+//func (this *MaxQueue) Max_value() int {
+//	if this.length == 0 {
+//		return -1
+//	}
+//	return this.max
+//}
+//
+//func (this *MaxQueue) Push_back(value int) {
+//	if this.head == nil {
+//		this.head = &queueNode{
+//			val: value,
+//		}
+//		this.tail = this.head
+//	} else {
+//		n := &queueNode{
+//			val: value,
+//		}
+//		this.tail.next = n
+//		this.tail = n
+//	}
+//
+//	this.length++
+//	if value > this.max {
+//		this.max = value
+//	}
+//}
+//
+//func (this *MaxQueue) Pop_front() int {
+//	if this.head == nil {
+//		return -1
+//	}
+//
+//	val := this.head.val
+//	this.head = this.head.next
+//	if this.head == nil {
+//		this.tail = this.head
+//	}
+//	this.length--
+//
+//}
+
+//二叉搜索树的最近公共祖先：https://leetcode-cn.com/problems/lowest-common-ancestor-of-a-binary-search-tree/
+func lowestCommonAncestor2(root, p, q *TreeNode) *TreeNode {
+	if root == q {
+		return q
+	}
+	if root == p {
+		return p
+	}
+	if root == nil {
+		return nil
+	}
+
+	r1 := lowestCommonAncestor(root.Left, p, q)
+	r2 := lowestCommonAncestor(root.Right, p, q)
+
+	if r1 != nil && r2 != nil {
+		return root
+	} else if r1 != nil {
+		return r1
+	} else if r2 != nil {
+		return r2
+	}
+	return nil
+}
+
+//n个骰子的点数:https://leetcode-cn.com/problems/nge-tou-zi-de-dian-shu-lcof/
+//超时
+func dicesProbability(n int) []float64 {
+	countMap := make(map[int]int)
+	countDicesNum(n, 0, countMap)
+
+	var res [][2]int
+	for k, v := range countMap {
+		res = append(res, [2]int{k, v})
+	}
+
+	sort.Slice(res, func(i, j int) bool {
+		return res[i][0] < res[j][0]
+	})
+
+	var rres []float64
+	p := math.Pow(1.0/6, float64(n))
+	for _, r := range res {
+		rres = append(rres, float64(r[1])*p)
+	}
+	return rres
+}
+
+func countDicesNum(n, sum int, countMap map[int]int) {
+	if n == 0 {
+		countMap[sum]++
+		return
+	}
+	for i := 1; i <= 6; i++ {
+		countDicesNum(n-1, sum+i, countMap)
+	}
+}
+
+func dicesProbability2(n int) []float64 {
+	var dp = make([][]int, n+1)
+
+	for i := 1; i <= n; i++ {
+		dp[i] = make([]int, n*6+1)
+		if 1 == i {
+			for j := 1; j <= 6; j++ {
+				dp[i][j] = 1
+			}
+		}
+	}
+
+	for i := 2; i <= n; i++ {
+		for j := 1; j <= n*6; j++ {
+			for k := 1; k <= 6; k++ {
+				if j-k > 0 {
+					dp[i][j] += dp[i-1][j-k]
+				}
+			}
+		}
+	}
+
+	p := math.Pow(1.0/6, float64(n))
+
+	var res []float64
+	for _, val := range dp[n] {
+		if val != 0 {
+			res = append(res, float64(val)*p)
+		}
+	}
+
+	return res
+}
+
+//和为s的连续正数序列：https://leetcode-cn.com/problems/he-wei-sde-lian-xu-zheng-shu-xu-lie-lcof/
+func findContinuousSequence(target int) [][]int {
+	var res [][]int
+	for i := 1; i <= target/2; i++ {
+		var tmp []int
+		sum := 0
+		for j := i; sum < target; j++ {
+			sum += j
+			tmp = append(tmp, j)
+		}
+		if sum == target {
+			res = append(res, tmp)
+		}
+	}
+
+	return res
+}
+
+//翻转单词顺序:https://leetcode-cn.com/problems/fan-zhuan-dan-ci-shun-xu-lcof/
+func reverseWords(s string) string {
+	var ss []string
+
+	for i := 0; i < len(s); {
+		if s[i] == ' ' {
+			i++
+			continue
+		}
+
+		var bs []byte
+		j := i
+		for ; j < len(s); j++ {
+			if s[j] != ' ' {
+				bs = append(bs, s[j])
+			} else {
+				break
+			}
+		}
+		ss = append(ss, string(bs))
+		i = j
+	}
+
+	for i := 0; i < len(ss)/2; i++ {
+		ss[i], ss[len(ss)-1-i] = ss[len(ss)-1-i], ss[i]
+	}
+
+	return strings.Join(ss, " ")
+}
+
+func isBalanced(root *TreeNode) bool {
+	_, res := checkIfBalanced(root)
+	return res
+}
+
+func checkIfBalanced(root *TreeNode) (n int, isb bool) {
+	if root == nil {
+		return 0, true
+	}
+	n2, isb2 := checkIfBalanced(root.Left)
+	n1, isb1 := checkIfBalanced(root.Right)
+
+	if n2 > n1 {
+		n = n2
+	} else {
+		n = n1
+	}
+
+	if isb1 && isb2 && n-n1 <= 1 && n-n2 <= 1 {
+		return n + 1, isb1
+	} else {
+		return n + 1, false
+	}
+}
+
+//二维数组中的查找：https://leetcode-cn.com/problems/er-wei-shu-zu-zhong-de-cha-zhao-lcof/
+func findNumberIn2DArray(matrix [][]int, target int) bool {
+	if len(matrix) == 0 || len(matrix[0]) == 0 {
+		return false
+	}
+	for k := 0; k < len(matrix[0]) && matrix[0][k] <= target; k++ {
+		var ss []int
+		for i := 0; i < len(matrix); i++ {
+			ss = append(ss, matrix[i][k])
+		}
+
+		_, exist := binarySearchInFindNumberIn2DArray(ss, target)
+		if exist {
+			return true
+		}
+	}
+
+	return false
+}
+
+func binarySearchInFindNumberIn2DArray(arr []int, num int) (int, bool) {
+	var i, j = 0, len(arr) - 1
+
+	for i <= j {
+		m := (i + j) / 2
+		if arr[m] > num {
+			if i == j {
+				return i - 1, false
+			}
+			j = m - 1
+		} else if arr[m] < num {
+			if i == j {
+				return i, false
+			}
+			i = m + 1
+		} else {
+			return m, true
+		}
+	}
+
+	return 0, false
+}
+
+// 数组中数字出现的次数：https://leetcode-cn.com/problems/shu-zu-zhong-shu-zi-chu-xian-de-ci-shu-lcof/
+func singleNumbers(nums []int) []int {
+	hash := make(map[int]bool)
+
+	for _, num := range nums {
+		if _, ok := hash[num]; ok {
+			delete(hash, num)
+		} else {
+			hash[num] = true
+		}
+	}
+
+	var res []int
+	for k := range hash {
+		res = append(res, k)
+	}
+
+	return res
+}
+
+//两个链表的第一个公共节点:https://leetcode-cn.com/problems/liang-ge-lian-biao-de-di-yi-ge-gong-gong-jie-dian-lcof/
+func getIntersectionNode(headA, headB *ListNode) *ListNode {
+	var stack1, stack2 []*ListNode
+	for p := headA; p != nil; p = p.Next {
+		stack1 = append(stack1, p)
+	}
+
+	for p := headB; p != nil; p = p.Next {
+		stack2 = append(stack2, p)
+	}
+
+	if len(stack1) == 0 || len(stack2) == 0 {
+		return nil
+	}
+
+	i := 0
+	for ; len(stack1)-1-i >= 0 && len(stack2)-1-i >= 0; i++ {
+		if stack1[len(stack1)-1-i] != stack2[len(stack2)-1-i] {
+			break
+		}
+	}
+
+	if i == 0 {
+		return nil
+	} else {
+		return stack1[len(stack1)-i]
+	}
+
+}
+
+//从上到下打印二叉树 II:https://leetcode-cn.com/problems/cong-shang-dao-xia-da-yin-er-cha-shu-ii-lcof/
+func levelOrder(root *TreeNode) [][]int {
+	if root == nil {
+		return nil
+	}
+	var res [][]int
+
+	var quene []*TreeNode
+
+	quene = append(quene, root)
+	k, count := 1, 0
+	for len(quene) != 0 {
+		count = 0
+		var tmp []int
+		for _, node := range quene[:k] {
+			if node.Left != nil {
+				quene = append(quene, node.Left)
+				count++
+			}
+			if node.Right != nil {
+				quene = append(quene, node.Right)
+				count++
+			}
+			tmp = append(tmp, node.Val)
+		}
+		if len(tmp) > 0 {
+			res = append(res, tmp)
+		}
+		quene = quene[k:]
+		//fmt.Println(quene)
+		k = count
+	}
+
+	return res
+}
+
+//树的子结构:https://leetcode-cn.com/problems/shu-de-zi-jie-gou-lcof/
+func isSubStructure(A *TreeNode, B *TreeNode) bool {
+	if A == nil || B == nil {
+		return false
+	}
+	if A.Val == B.Val {
+		if checkIsSubStructure(A, B) {
+			return true
+		}
+	}
+
+	if isSubStructure(A.Right, B) {
+		return true
+	} else if isSubStructure(A.Left, B) {
+		return true
+	} else {
+		return false
+	}
+
+}
+
+func checkIsSubStructure(A *TreeNode, B *TreeNode) bool {
+	if B == nil {
+		return true
+	} else if A == nil && B != nil {
+		return false
+	}
+
+	if A.Val == B.Val {
+		if !checkIsSubStructure(A.Left, B.Left) {
+			return false
+		}
+		if !checkIsSubStructure(A.Right, B.Right) {
+			return false
+		}
+		return true
+	}
+	return false
+}
+
+//矩阵中的路径：https://leetcode-cn.com/problems/ju-zhen-zhong-de-lu-jing-lcof/
+func exist(board [][]byte, word string) bool {
+	if word == "" {
+		return true
+	}
+
+	for i := 0; i < len(board); i++ {
+		for j := 0; j < len(board[0]); j++ {
+			if board[i][j] == word[0] {
+				occupy := make(map[[2]int]bool)
+				occupy[[2]int{i, j}] = true
+				if existPath(board, word, 1, i, j, occupy) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
+func existPath(board [][]byte, word string, c int, i, j int, occupy map[[2]int]bool) bool {
+	if c >= len(word) {
+		return true
+	}
+
+	if i+1 < len(board) && word[c] == board[i+1][j] && !occupy[[2]int{i + 1, j}] {
+		occupy[[2]int{i + 1, j}] = true
+		if existPath(board, word, c+1, i+1, j, occupy) {
+			return true
+		}
+		delete(occupy, [2]int{i + 1, j})
+	}
+
+	if i-1 >= 0 && word[c] == board[i-1][j] && !occupy[[2]int{i - 1, j}] {
+		occupy[[2]int{i - 1, j}] = true
+		if existPath(board, word, c+1, i-1, j, occupy) {
+			return true
+		}
+		delete(occupy, [2]int{i - 1, j})
+
+	}
+
+	if j-1 >= 0 && word[c] == board[i][j-1] && !occupy[[2]int{i, j - 1}] {
+		occupy[[2]int{i, j - 1}] = true
+		if existPath(board, word, c+1, i, j-1, occupy) {
+			return true
+		}
+		delete(occupy, [2]int{i, j - 1})
+
+	}
+
+	if j+1 < len(board[0]) && word[c] == board[i][j+1] && !occupy[[2]int{i, j + 1}] {
+		occupy[[2]int{i, j + 1}] = true
+		if existPath(board, word, c+1, i, j+1, occupy) {
+			return true
+		}
+		delete(occupy, [2]int{i, j + 1})
+	}
+
+	return false
+}
+
+//剪绳子：https://leetcode-cn.com/problems/jian-sheng-zi-lcof/
+func cuttingRope(n int) int {
+	if n <= 1 {
+		return 0
+	}
+	var max int
+
+	for i := 2; i <= n; i++ {
+		m := n / i
+		k := n % i
+		var tmp = 1
+		for j := 1; j <= i; j++ {
+			if k > 0 {
+				tmp *= m + 1
+				k--
+			} else {
+				tmp *= m
+			}
+		}
+
+		if tmp > max {
+			max = tmp
+		}
+
+	}
+
+	return max
+}
+
+//数值的整数次方：https://leetcode-cn.com/problems/shu-zhi-de-zheng-shu-ci-fang-lcof/
+func myPow(x float64, n int) float64 {
+	if n == 0 {
+		return 1
+	}
+	if n == 1 {
+		return x
+	}
+	if n < 0 {
+		x, n = 1/x, -n
+	}
+	res := 1.0
+	if n%2 == 1 {
+		res *= x
+	}
+	rr := myPow(x, n/2)
+	res *= rr * rr
+	return res
+}
+
+//调整数组顺序使奇数位于偶数前面:https://leetcode-cn.com/problems/diao-zheng-shu-zu-shun-xu-shi-qi-shu-wei-yu-ou-shu-qian-mian-lcof/
+func exchange(nums []int) []int {
+	flag := true
+	for i, j := 0, len(nums)-1; i < j; {
+		if flag {
+			if nums[i]%2 == 0 {
+				flag = false
+				continue
+			}
+			i++
+		} else {
+			if nums[j]%2 == 1 {
+				nums[i], nums[j] = nums[j], nums[i]
+				flag = true
+			}
+			j--
+		}
+	}
+	return nums
+}
+
+//链表中倒数第k个节点：https://leetcode-cn.com/problems/lian-biao-zhong-dao-shu-di-kge-jie-dian-lcof/
+func getKthFromEnd(head *ListNode, k int) *ListNode {
+	var h = head
+	for i := 0; i < k; i++ {
+		h = h.Next
+	}
+
+	var s = head
+
+	for ; h != nil; h = h.Next {
+		s = s.Next
+	}
+	return s
+}
+
+//合并两个排序的链表：https://leetcode-cn.com/problems/he-bing-liang-ge-pai-xu-de-lian-biao-lcof/
+func mergeTwoLists(l1 *ListNode, l2 *ListNode) *ListNode {
+	if l1 == nil {
+		return l2
+	} else if l2 == nil {
+		return l1
+	}
+
+	var mTmp, nTmp *ListNode
+
+	for m, n := l1, l2; m != nil; {
+		mTmp = m.Next
+
+		for ; n != nil; nTmp, n = n, n.Next {
+			if n.Val > m.Val {
+				break
+			}
+		}
+
+		if n != nil {
+			if nTmp == nil {
+				m.Next = l2
+				l2 = m
+			} else {
+				nTmp.Next = m
+				m.Next = n
+			}
+		} else {
+			nTmp.Next = m
+			m.Next = nil
+		}
+		n = m
+		m = mTmp
+	}
+
+	return l2
+}
+
+//顺时针打印矩阵：https://leetcode-cn.com/problems/shun-shi-zhen-da-yin-ju-zhen-lcof/
+func spiralOrder(matrix [][]int) []int {
+	var res []int
+	flag := 1
+	num := math.MaxInt32
+	for i, j := 0, 0; i < len(matrix) && i >= 0 && j < len(matrix[0]) && j >= 0 && matrix[i][j] != num; {
+		res = append(res, matrix[i][j])
+		matrix[i][j] = num
+		switch flag {
+		case 1:
+			if (j+1) >= len(matrix[0]) || matrix[i][j+1] == num {
+				flag = 2
+				i++
+				continue
+			}
+			j++
+
+		case 2:
+			if i+1 >= len(matrix) || matrix[i+1][j] == num {
+				flag = 3
+				j--
+				continue
+			}
+			i++
+		case 3:
+			if j-1 < 0 || matrix[i][j-1] == num {
+				flag = 4
+				i--
+				continue
+			}
+			j--
+		case 4:
+			if i-1 < 0 || matrix[i-1][j] == num {
+				flag = 1
+				j++
+				continue
+			}
+			i--
+		}
+	}
+
+	return res
+
+}
+
+//栈的压入、弹出序列：https://leetcode-cn.com/problems/zhan-de-ya-ru-dan-chu-xu-lie-lcof/
+func validateStackSequences(pushed []int, popped []int) bool {
+	var stack []int
+	var i, j int
+	for i, j = 0, 0; i < len(pushed) && j < len(popped); {
+		if len(stack) > 0 && popped[j] == stack[len(stack)-1] {
+			stack = stack[:len(stack)-1]
+			j++
+		} else {
+			stack = append(stack, pushed[i])
+			i++
+		}
+	}
+
+	for ; j < len(popped); {
+		if len(stack) > 0 && popped[j] == stack[len(stack)-1] {
+			stack = stack[:len(stack)-1]
+			j++
+		} else {
+			break
+		}
+	}
+
+	if i == len(pushed) && j == len(popped) {
+		return true
+	}
+
+	return false
+}
+
+//从上到下打印二叉树 III：https://leetcode-cn.com/problems/cong-shang-dao-xia-da-yin-er-cha-shu-iii-lcof/
+func levelOrder2(root *TreeNode) [][]int {
+	if root == nil {
+		return nil
+	}
+	var res [][]int
+	var quene []*TreeNode
+	quene = append(quene, root)
+	length := 1
+	var reverse = false
+	for len(quene) != 0 {
+		var rr []int
+		if !reverse { //也可以用判断奇偶的方法，这样可以减少代码
+			var tmp int
+			for i := 0; i < length; i++ {
+				tmp += addNode(&quene, quene[i])
+				rr = append(rr, quene[i].Val)
+			}
+			quene = quene[length:]
+			length = tmp
+			reverse = true
+		} else {
+			var tmp int
+			for i := 0; i < length; i++ {
+				tmp += addNode(&quene, quene[i])
+				rr = append(rr, quene[length-1-i].Val)
+			}
+			quene = quene[length:]
+			length = tmp
+			reverse = false
+		}
+		res = append(res, rr)
+	}
+	return res
+}
+
+func addNode(quene *[]*TreeNode, node *TreeNode) int {
+	var tmp int
+	if node.Left != nil {
+		*quene = append(*quene, node.Left)
+		tmp++
+	}
+	if node.Right != nil {
+		*quene = append(*quene, node.Right)
+		tmp++
+	}
+	return tmp
+}
+
+// 二叉搜索树的后序遍历序列:https://leetcode-cn.com/problems/er-cha-sou-suo-shu-de-hou-xu-bian-li-xu-lie-lcof/
+func verifyPostorder(postorder []int) bool {
+	if len(postorder) == 0 {
+		return true
+	}
+	last := postorder[len(postorder)-1]
+
+	var i int
+	for i = len(postorder) - 1; i >= 0 && postorder[i] >= last; i-- {
+	}
+	for j := 0; j < i; j++ {
+		if postorder[j] > last {
+			return false
+		}
+	}
+
+	if verifyPostorder(postorder[:i+1]) && verifyPostorder(postorder[i+1:len(postorder)-1]) {
+		return true
+	}
+	return false
+}
+
+//二叉树中和为某一值的路径：https://leetcode-cn.com/problems/er-cha-shu-zhong-he-wei-mou-yi-zhi-de-lu-jing-lcof/
+func pathSum(root *TreeNode, sum int) [][]int {
+	var res [][]int
+	pathSumDp(root, sum, []int{}, 0, &res)
+	return res
+}
+
+func pathSumDp(root *TreeNode, sum int, tmp []int, total int, res *[][]int) {
+	if root == nil {
+		return
+	}
+
+	tmp = append(tmp, root.Val)
+	total += root.Val
+	if root.Right == nil && root.Left == nil && total == sum {
+		tt := append([]int{}, tmp...)
+		*res = append(*res, tt)
+		return
+	}
+
+	pathSumDp(root.Left, sum, tmp, total, res)
+	pathSumDp(root.Right, sum, tmp, total, res)
+	return
 }

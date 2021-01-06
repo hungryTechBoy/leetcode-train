@@ -3,13 +3,12 @@ package main
 import "fmt"
 
 func main() {
-	for i:=0;i<3;i++{
-		if i==0{
-			i++
-			continue
-		}
-		fmt.Println(i)
+	var i = 5
+	for i, j := 0, 0; i < 3; i++ {
+		fmt.Println(j)
 	}
+
+	fmt.Println(i)
 }
 
 type tettest struct {

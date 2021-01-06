@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"math"
-	"sort"
 )
 
 func MakeRange(beg int, end int, step int) []int {

@@ -24,7 +24,7 @@ func main() {
 	//	Right: nil,
 	//}
 	//t1.Right = &t2
-	//t2.Left = &t3
+	//t1.Left = &t3
 	//fmt.Println(preorderTraversal2(&t1))
 	//d := {}string{"8887","8889","8878","8898","8788","8988","7888","9888"}
 	//t := "8888"
@@ -65,7 +65,26 @@ func main() {
 	//}
 
 	//ss:=[][]int{{1,3},{3,5},{6,7},{6,8},{8,4},{9,5}}
-	s := []int{1,2}
-	fmt.Println(findKthLargest(s, 2))
+	//s := "2*3-4*5"
+	//fmt.Println(diffWaysToCompute(s))
+	//var count int
+	//_, err := fmt.Scanln(&count)
+	//if err != nil {
+	//	fmt.Println("error happen")
+	//	os.Exit(1)
+	//}
+	//
+	//for i := 0; i < count; i++ {
+	//	var v1, v2, v3 int
+	//	_, err := fmt.Scan(&v1, &v2, &v3)
+	//	if err != nil {
+	//		fmt.Println("error happen")
+	//		os.Exit(1)
+	//	}
+	//
+	//}
+	//arr := [][]int{{1,2,3,4,5},{6,7,8,9,10},{11,12,13,14,15},{16,17,18,19,20},{21,22,23,24,25}}
+
+	fmt.Println(verifyPostorder([]int{1,2,5,10,6,9,4,3}))
 
 }
