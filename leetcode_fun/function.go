@@ -2251,7 +2251,7 @@ func isInclude(ori, res map[uint8]int) bool {
 }
 
 //无重复字符的最长子串：https://leetcode-cn.com/problems/longest-substring-without-repeating-characters/
-func lengthOfLongestSubstring(s string) int {
+func lengthOfLongestSubstring2(s string) int {
 	if len(s) <= 0 {
 		return 0
 	}
@@ -3098,6 +3098,272 @@ func shiftDown(num []int) {
 	}
 
 	num[i] = tmp
+}
+//type Node struct {
+//	Val    int
+//	Next   *Node
+//	Random *Node
+//}
+//
+////复杂链表的复制:https://leetcode-cn.com/problems/fu-za-lian-biao-de-fu-zhi-lcof/
+//func copyRandomList(head *Node) *Node {
+//	pToOrder := make(map[*Node]int)
+//	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
+//		pToOrder[h] = i
+//	}
+//
+//	randonToOrder := make(map[int]int)
+//	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
+//		if h.Random != nil {
+//			randonToOrder[i] = pToOrder[h.Random]
+//		}
+//	}
+//
+//	var hhead, tail *Node
+//	orderToP := make(map[int]*Node)
+//	for i, h := 0, head; h != nil; i, h = i+1, h.Next {
+//		tmp := *h
+//		if i == 0 {
+//			tail = &tmp
+//			hhead = tail
+//		} else {
+//			tail.Next = &tmp
+//			tail = &tmp
+//		}
+//		orderToP[i] = &tmp
+//	}
+//
+//	for i, h := 0, hhead; h != nil; i, h = i+1, h.Next {
+//		if val, ok := randonToOrder[i]; ok {
+//			h.Random = orderToP[val]
+//		}
+//	}
+//
+//	return hhead
+//
+//}
+//
+////深度优先遍历
+//func copyRandomList2(head *Node) *Node {
+//	visit := make(map[*Node]*Node)
+//	return copyRandomList2DFS(head, visit)
+//}
+//
+//func copyRandomList2DFS(head *Node, visit map[*Node]*Node) (n *Node) {
+//	if head == nil {
+//		return nil
+//	}
+//
+//	if visit[head] != nil {
+//		return visit[head]
+//	}
+//	n = &Node{
+//		Val: head.Val,
+//	}
+//	visit[head] = n
+//	n.Next = copyRandomList2DFS(head.Next, visit)
+//	n.Random = copyRandomList2DFS(head.Random, visit)
+//
+//	return n
+//}
+
+//二叉搜索树与双向链表:https://leetcode-cn.com/problems/er-cha-sou-suo-shu-yu-shuang-xiang-lian-biao-lcof/
+//无法在leetcode验证
+func treeToDoublyList(root *TreeNode) *TreeNode {
+	if root == nil {
+		return nil
+	}
+	var head **TreeNode
+	tail := treeToDoublyListDp(root, 0, head)
+	tail.Right = *head
+	(*head).Left = tail
+	return *head
+}
+
+func treeToDoublyListDp(root *TreeNode, count int, head **TreeNode) *TreeNode {
+	if root.Left == nil && root.Right == nil {
+		count++
+		if count == 1 {
+			head = &root
+		}
+		return root
+	}
+
+	lNode := treeToDoublyListDp(root.Left, count, head)
+	rNode := treeToDoublyListDp(root.Right, count, head)
+
+	root.Left = lNode
+	lNode.Right = root
+	return rNode
+}
+
+func permutationStr(s string) []string {
+	res := make([]string, 0)
+	visit := make(map[byte]int)
+	for i := 0; i < len(s); i++ {
+		visit[s[i]]++
+	}
+	permutationDP(s, nil, visit, &res)
+	return res
+}
+
+func permutationDP(s string, subStr []byte, visit map[byte]int, res *[]string) {
+	if len(s) == 0 {
+		return
+	}
+	if len(subStr) == len(s) {
+		*res = append(*res, string(subStr))
+	}
+
+	var dup = make(map[byte]bool)
+	for i := 0; i < len(s); i++ {
+		if visit[s[i]] > 0 && !dup[s[i]] {
+			subStr = append(subStr, s[i])
+			visit[s[i]]--
+			permutationDP(s, subStr, visit, res)
+			subStr = subStr[:len(subStr)-1]
+			visit[s[i]]++
+			dup[s[i]] = true
+		}
+	}
+}
+
+//数字序列中某一位的数字：https://leetcode-cn.com/problems/shu-zi-xu-lie-zhong-mou-yi-wei-de-shu-zi-lcof/
+func findNthDigit(n int) int {
+
+	digit := 1
+	totalBit := 0
+
+	for {
+		intervalBit := int(9*math.Pow10(digit-1)) * digit
+		if totalBit <= n && totalBit+int(intervalBit) >= n {
+			break
+		}
+		totalBit += intervalBit
+		digit++
+	}
+
+	begNum := int(math.Pow10(digit-1)) - 1
+	num := (n - totalBit) / digit
+	remain := (n - totalBit) % digit
+
+	if remain == 0 {
+		lastNum := begNum + num
+		ss := strconv.Itoa(lastNum)
+		rr, _ := strconv.Atoi(string(ss[len(ss)-1]))
+		return rr
+	} else {
+		lastNum := begNum + num + 1
+		ss := strconv.Itoa(lastNum)
+		rr, _ := strconv.Atoi(string(ss[remain-1]))
+		return rr
+	}
+
+}
+
+//把数组排成最小的数:https://leetcode-cn.com/problems/ba-shu-zu-pai-cheng-zui-xiao-de-shu-lcof/
+func minNumber(nums []int) string {
+	var numsStr []string
+
+	for _, num := range nums {
+		s := strconv.Itoa(num)
+		numsStr = append(numsStr, s)
+	}
+	sort.Slice(numsStr, func(i, j int) bool {
+		s1, s2 := numsStr[i]+numsStr[j], numsStr[j]+numsStr[i]
+		if s1 <= s2 {
+			return true
+		} else {
+			return false
+		}
+	})
+
+	res := strings.Join(numsStr, "")
+	return res
+}
+
+//把数字翻译成字符串:https://leetcode-cn.com/problems/ba-shu-zi-fan-yi-cheng-zi-fu-chuan-lcof/
+func translateNum(num int) int {
+	numStr := strconv.Itoa(num)
+	var dp = make([]int, len(numStr)+1)
+	dp[1] = 1
+	dp[0] = 1
+
+	for i := 2; i < len(numStr)+1; i++ {
+		dp[i] += dp[i-1]
+
+		tmp, _ := strconv.Atoi(numStr[i-2 : i])
+		if numStr[i-2] != '0' && tmp <= 25 {
+			dp[i] += dp[i-2]
+		}
+	}
+
+	return dp[len(dp)-1]
+}
+
+//礼物的最大价值:https://leetcode-cn.com/problems/li-wu-de-zui-da-jie-zhi-lcof/
+func maxValue(grid [][]int) int {
+	//max := math.MinInt32
+	//maxValueTranverse(grid, 0, 0, 0, &max)
+	//return max
+
+	var dp = make([][]int, len(grid))
+
+	tmp := 0
+	for i := range dp {
+		dp[i] = make([]int, len(grid[0]))
+		tmp += grid[i][0]
+		dp[i][0] = tmp
+	}
+
+	tmp = 0
+	for i, val := range grid[0] {
+		tmp += val
+		dp[0][i] = tmp
+	}
+
+	for i := 1; i < len(grid); i++ {
+		for j := 1; j < len(grid[0]); j++ {
+			var max = dp[i][j-1]
+			if dp[i-1][j] > dp[i][j-1] {
+				max = dp[i-1][j]
+			}
+
+			dp[i][j] = max + grid[i][j]
+		}
+	}
+
+	return dp[len(grid)-1][len(grid[0])-1]
+}
+
+//最长不含重复字符的子字符串:https://leetcode-cn.com/problems/zui-chang-bu-han-zhong-fu-zi-fu-de-zi-zi-fu-chuan-lcof/
+func lengthOfLongestSubstring(s string) int {
+	if len(s)==0{
+		return 0
+	}
+	var dp = make([]int, len(s))
+	dp[0] = 1
+
+	for i := 1; i < len(s); i++ {
+		var tmp = make(map[byte]int)
+		var needAdd bool = true
+		for j := i - dp[i-1]; j <= i; j++ {
+			tmp[s[j]]++
+			if tmp[s[j]] > 1 {
+				needAdd = false
+				break
+			}
+		}
+
+		dp[i] = 1
+		if needAdd {
+			dp[i] = dp[i-1] + 1
+		} else if dp[i-1] > 1 {
+			dp[i] = dp[i-1]
+		}
+	}
+
+	return dp[len(dp)-1]
 }
 
 //使用快排
